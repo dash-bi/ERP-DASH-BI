@@ -184,6 +184,75 @@ ERP.db = (() => {
         return { ok: true };
     };
 
+    /** Colecciones de un respaldo; salen del esquema para no desincronizarse de él. */
+    const COLECCIONES = Object.keys(emptySchema()).filter((clave) => Array.isArray(emptySchema()[clave]));
+
+    /**
+     * Revisa un respaldo exportado por esta aplicación sin tocar los datos actuales.
+     * Devuelve los datos normalizados y un resumen para que el usuario confirme.
+     */
+    const validarRespaldo = (texto) => {
+        let parsed;
+        try {
+            parsed = JSON.parse(String(texto || ''));
+        } catch (error) {
+            return fallo('El archivo no es un JSON válido. Use el archivo descargado con «Exportar datos (JSON)».');
+        }
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)
+            || !Array.isArray(parsed.usuarios) || !Array.isArray(parsed.ventas)
+            || !parsed.config || typeof parsed.config !== 'object') {
+            return fallo('El archivo no es un respaldo de este sistema.');
+        }
+        if (parsed.version !== SCHEMA_VERSION) {
+            return fallo(`El respaldo tiene el formato ${parsed.version ?? 'desconocido'} y este sistema usa el formato ${SCHEMA_VERSION}.`);
+        }
+        const coleccionDanada = COLECCIONES.find((clave) => clave in parsed && !Array.isArray(parsed[clave]));
+        if (coleccionDanada) return fallo(`El respaldo está dañado: «${coleccionDanada}» no es una lista.`);
+
+        const usuarioInvalido = parsed.usuarios.find((u) => !u || !u.id || typeof u.usuario !== 'string'
+            || typeof u.clave !== 'string' || !ROLES_VALIDOS.includes(u.rol));
+        if (usuarioInvalido) return fallo('El respaldo tiene usuarios incompletos o con un rol desconocido.');
+        // Sin un administrador activo nadie podría volver a entrar a Configuración.
+        if (!parsed.usuarios.some((u) => u.rol === 'administrador' && u.activo !== false)) {
+            return fallo('El respaldo no tiene un administrador activo.');
+        }
+
+        const datos = { ...emptySchema(), ...parsed, config: { ...emptySchema().config, ...parsed.config } };
+        return {
+            ok: true,
+            datos,
+            resumen: {
+                empresa: datos.config.empresa,
+                nit: datos.config.nit,
+                clientes: datos.terceros.filter((t) => t.tipo === 'cliente').length,
+                proveedores: datos.terceros.filter((t) => t.tipo === 'proveedor').length,
+                productos: datos.productos.length,
+                ventas: datos.ventas.filter((v) => !v.anulada).length,
+                compras: datos.compras.length,
+                gastos: datos.gastos.length,
+                empleados: datos.empleados.length,
+                usuarios: datos.usuarios.map((u) => u.usuario)
+            }
+        };
+    };
+
+    /** Reemplaza todos los datos por los de un respaldo válido. Si no se puede guardar, no cambia nada. */
+    const importarRespaldo = (texto) => {
+        const revision = validarRespaldo(texto);
+        if (!revision.ok) return revision;
+
+        const anterior = data;
+        data = revision.datos;
+        migrar();
+        if (!persist()) {
+            data = anterior;
+            persistenciaActiva = storageDisponible();
+            return fallo('El navegador no permitió guardar el respaldo (espacio insuficiente o almacenamiento bloqueado). Los datos actuales no cambiaron.');
+        }
+        U.bus.emit('db:changed', { motivo: 'importar' });
+        return { ok: true, resumen: revision.resumen };
+    };
+
     const exportJSON = () => JSON.stringify(data, null, 2);
 
     /**
@@ -1394,7 +1463,7 @@ ERP.db = (() => {
        ============================================================ */
 
     return {
-        STORAGE_KEY, load, reset, vaciar, persist, exportJSON, hashClave,
+        STORAGE_KEY, load, reset, vaciar, validarRespaldo, importarRespaldo, persist, exportJSON, hashClave,
         all, get, insert, update, remove,
         config, updateConfig,
         clientes, proveedores, productos, productoPorId, terceroPorId,

@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 1.5.0 | 2026-09-13 | *(esta versión)* | **Empezar desde cero:** en Configuración → Datos y respaldo, un botón borra toda la operación, incluidos los datos de demostración, para registrar la empresa real. Pide razón social, NIT y capital inicial, ofrece exportar un respaldo antes y exige escribir BORRAR. Conserva usuarios, permisos por rol y parámetros de IVA y nómina; reinicia consecutivos en FV-0001 y FC-0001. **Versionado automático:** `versionar.py` numera cada versión y actualiza app.js, index.html e historial.md. |
+| 1.5.1 | 2026-09-13 | *(esta versión)* | **Importar respaldo (JSON):** en Configuración → Datos y respaldo se carga un respaldo exportado para llevar los datos de un navegador, equipo o dirección a otra (por ejemplo, del archivo local a Vercel). Valida el archivo, muestra un resumen (empresa, clientes, productos, ventas, usuarios) y pide confirmar; si el navegador no puede guardar, conserva los datos actuales. Documenta que cada origen tiene sus propios datos. |
+| 1.5.0 | 2026-09-13 | `1f167af` | **Empezar desde cero:** en Configuración → Datos y respaldo, un botón borra toda la operación, incluidos los datos de demostración, para registrar la empresa real. Pide razón social, NIT y capital inicial, ofrece exportar un respaldo antes y exige escribir BORRAR. Conserva usuarios, permisos por rol y parámetros de IVA y nómina; reinicia consecutivos en FV-0001 y FC-0001. **Versionado automático:** `versionar.py` numera cada versión y actualiza app.js, index.html e historial.md. |
 | 1.4.1 | 2026-09-12 | `2ab344f` | **Versión visible y sin caché:** `ERP.VERSION` se muestra en la cabecera del menú y en la pantalla de acceso, los archivos se piden con `?v=` y `vercel.json` obliga a revalidar, para poder confirmar de un vistazo qué versión sirve el navegador. |
 | 1.4.0 | 2026-09-11 | `e094632` | **Permisos por rol configurables:** en Configuración → Permisos por rol el administrador marca qué módulos ve Contador y Vendedor, y el menú, la navegación y la importación de PDF respetan esa selección al instante, también en otras pestañas. Configuración sigue siendo solo del administrador y cada rol debe conservar al menos un módulo. Al entrar se abre el tablero o, si el rol no lo tiene, su primer módulo permitido. **Limpieza de la raíz:** se eliminan `Agents.md`, `CLAUDE.md` y `README.md`; `vercel.json` y `.gitignore` permanecen en la raíz; `historial.md` pasa a la app. |
 | — | 2026-09-11 | `5fdd007`, `6cdff0a`, `ebfbcdd` | Commits hechos desde la web de GitHub («Update index.html / base.css / components.css») sin cambios de contenido. |
@@ -112,7 +113,14 @@ Push a `main` de `github.com/dash-bi/finanzas` → Vercel despliega solo.
 - **Edición.** `editarVenta` / `editarCompra` / `editarAbono` **revierten el documento original y aplican el nuevo** con las mismas validaciones, conservando número, abonos y costo congelado.
 - **Errores sin excepciones.** Las funciones de negocio devuelven `{ ok: false, error }` (helper `fallo`) y la UI lo muestra en un banner.
 
-### Reiniciar y empezar desde cero
+### Reiniciar, empezar desde cero e importar
+
+- **Los datos viven por origen.** Cada navegador y cada dirección (archivo local `file://`, `localhost`, cada dominio de Vercel) tiene su propio `localStorage`. El código puede ser idéntico y mostrar otra empresa: eso son datos distintos, no una versión anterior. La versión del programa se confirma con el número en pantalla.
+- **`db.validarRespaldo(texto)` / `db.importarRespaldo(texto)`** («Importar respaldo (JSON)») llevan los datos de un origen a otro:
+  - Validan el JSON, el formato (`SCHEMA_VERSION`), que las colecciones sean listas y que exista un administrador activo.
+  - Muestran un resumen y piden confirmar antes de reemplazar.
+  - Si `persist()` falla, restauran los datos anteriores.
+  - Si el usuario conectado no existe en el respaldo, el montaje devuelve a la pantalla de acceso.
 
 - **`db.reset()`** («Reiniciar datos de demostración») regenera la empresa ficticia completa, incluidos los usuarios con sus contraseñas iniciales.
 - **`db.vaciar({ empresa, nit, capitalInicial })`** («Empezar desde cero») deja todas las colecciones vacías y reemplaza los datos de la empresa. Conserva los usuarios, `permisosRol` y los parámetros de IVA y nómina, y reinicia los consecutivos.

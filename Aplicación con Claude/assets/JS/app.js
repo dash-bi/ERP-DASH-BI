@@ -6,7 +6,7 @@ window.ERP = window.ERP || {};
 
 /* Versión publicada. Al cambiarla, actualizar también el ?v= de index.html
    para que el navegador no reutilice los archivos anteriores. */
-ERP.VERSION = '1.5.0';
+ERP.VERSION = '1.5.1';
 
 /* ============================================================
    Configuración del sistema (solo administrador)
@@ -293,6 +293,120 @@ ERP.configuracion = (() => {
             on: { click: exportarRespaldo }
         });
 
+        /* Cada origen (archivo local, localhost, cada dirección de Vercel) guarda sus propios
+           datos en el navegador: exportar e importar es la forma de llevarlos de uno a otro. */
+        const abrirImportacion = (nombreArchivo, texto) => {
+            const revision = db.validarRespaldo(texto);
+            if (!revision.ok) {
+                ui.toastError('Respaldo no válido', revision.error);
+                return;
+            }
+            const r = revision.resumen;
+            const actual = ERP.auth.usuario();
+            const usuarioSigue = Boolean(actual)
+                && revision.datos.usuarios.some((u) => u.id === actual.id && u.activo !== false);
+
+            const entiendo = el('input', { attrs: { type: 'checkbox' } });
+            const errores = el('div');
+            const fila = (etiqueta, valor) => el('tr', {}, [
+                el('td', { text: etiqueta }),
+                el('td', { class: 'num', text: valor })
+            ]);
+
+            const contenido = el('div', { class: 'stack' }, [
+                ui.banner('Se reemplazarán todos los datos actuales',
+                    `La información guardada en este navegador se sustituye por la del archivo «${nombreArchivo}». Exporte los datos actuales antes si desea conservarlos.`,
+                    'warning'),
+                el('div', { class: 'table-wrap' }, [
+                    el('table', { class: 'data' }, [el('tbody', {}, [
+                        fila('Empresa', r.empresa || '—'),
+                        fila('NIT', r.nit || '—'),
+                        fila('Clientes', U.num(r.clientes)),
+                        fila('Proveedores', U.num(r.proveedores)),
+                        fila('Productos y servicios', U.num(r.productos)),
+                        fila('Ventas', U.num(r.ventas)),
+                        fila('Compras', U.num(r.compras)),
+                        fila('Gastos', U.num(r.gastos)),
+                        fila('Empleados', U.num(r.empleados)),
+                        fila('Usuarios', r.usuarios.join(', '))
+                    ])])
+                ]),
+                usuarioSigue ? null : ui.banner('Deberá ingresar de nuevo',
+                    'Su usuario actual no está en el respaldo: al importar se cerrará la sesión y deberá entrar con un usuario del respaldo.',
+                    'info'),
+                el('div', { class: 'row row-wrap' }, [
+                    el('button', {
+                        class: 'btn btn-secondary', text: '⤓ Exportar los datos actuales antes', attrs: { type: 'button' },
+                        on: { click: exportarRespaldo }
+                    })
+                ]),
+                errores,
+                el('label', { class: 'check' }, [
+                    entiendo,
+                    el('span', { text: 'Entiendo que los datos actuales de este navegador se reemplazan' })
+                ])
+            ]);
+
+            const btnCancelar = el('button', { class: 'btn btn-secondary', text: 'Cancelar', attrs: { type: 'button' } });
+            const btnReemplazar = el('button', {
+                class: 'btn btn-danger', text: 'Reemplazar con el respaldo', attrs: { type: 'button' }, props: { disabled: true }
+            });
+            entiendo.addEventListener('change', () => { btnReemplazar.disabled = !entiendo.checked; });
+
+            const ctrl = ui.modal({
+                titulo: 'Importar respaldo',
+                subtitulo: nombreArchivo,
+                contenido,
+                acciones: [btnCancelar, btnReemplazar]
+            });
+            btnCancelar.addEventListener('click', () => ctrl.cerrar());
+
+            btnReemplazar.addEventListener('click', () => {
+                U.clear(errores);
+                if (!entiendo.checked) return;
+                if (!autorizado()) {
+                    ctrl.cerrar();
+                    return;
+                }
+                const res = db.importarRespaldo(texto);
+                if (!res.ok) {
+                    errores.appendChild(ui.banner('No se importó el respaldo', res.error, 'danger'));
+                    return;
+                }
+                ctrl.cerrar();
+                ui.toastOk('Respaldo importado',
+                    `${res.resumen.empresa}: ${U.num(res.resumen.ventas)} ventas, ${U.num(res.resumen.productos)} productos y ${U.num(res.resumen.clientes)} clientes.`);
+                // El montaje resincroniza la sesión: si el usuario no está en el respaldo, vuelve al acceso.
+                ERP.app.refrescar();
+            });
+        };
+
+        const selectorRespaldo = el('input', {
+            attrs: { type: 'file', accept: '.json,application/json', hidden: true, 'aria-label': 'Archivo de respaldo' }
+        });
+        selectorRespaldo.addEventListener('change', async () => {
+            const archivo = selectorRespaldo.files && selectorRespaldo.files[0];
+            if (!archivo) return;
+            try {
+                if (!autorizado()) return;
+                if (archivo.size > 10 * 1024 * 1024) {
+                    ui.toastError('Archivo demasiado grande', 'El respaldo supera 10 MB; no parece un archivo de este sistema.');
+                    return;
+                }
+                abrirImportacion(archivo.name, await archivo.text());
+            } catch (error) {
+                ui.toastError('No se pudo leer el archivo', 'Intente de nuevo o elija otro archivo.');
+            } finally {
+                // Permite volver a elegir el mismo archivo.
+                selectorRespaldo.value = '';
+            }
+        });
+
+        const btnImportar = el('button', {
+            class: 'btn btn-secondary', text: '⤒ Importar respaldo (JSON)', attrs: { type: 'button' },
+            on: { click: () => { if (autorizado()) selectorRespaldo.click(); } }
+        });
+
         /* Borrado total para empezar con la empresa real. Se pide escribir una palabra
            porque, a diferencia de reiniciar la demostración, no deja nada que auditar. */
         const abrirEmpezarDeCero = () => {
@@ -482,13 +596,14 @@ ERP.configuracion = (() => {
             ui.card('Datos y respaldo', el('div', { class: 'stack' }, [
                 el('p', {
                     class: 'text-muted',
-                    text: `La información se guarda en el navegador (localStorage). ${db.persistente ? 'La persistencia está activa.' : 'ATENCIÓN: el navegador bloqueó el almacenamiento; los cambios se perderán al recargar.'}`
+                    text: `La información se guarda en este navegador (localStorage): cada navegador y cada dirección —el archivo local o el sitio publicado— tiene sus propios datos. ${db.persistente ? 'La persistencia está activa.' : 'ATENCIÓN: el navegador bloqueó el almacenamiento; los cambios se perderán al recargar.'}`
                 }),
                 el('ul', { class: 'stack-sm text-muted' }, [
+                    el('li', { text: 'Exportar e importar respaldo: pasa sus datos de un navegador, equipo o dirección a otro. Importar reemplaza los datos de este navegador.' }),
                     el('li', { text: 'Reiniciar datos de demostración: vuelve a cargar la empresa ficticia para practicar.' }),
                     el('li', { text: 'Empezar desde cero: borra todo, incluida la demostración, para registrar su empresa real.' })
                 ]),
-                el('div', { class: 'row row-wrap' }, [btnExportar, btnReiniciar, btnVaciar])
+                el('div', { class: 'row row-wrap' }, [btnExportar, btnImportar, btnReiniciar, btnVaciar, selectorRespaldo])
             ])),
 
             el('div', { class: 'row row-wrap' }, [btnGuardar])
