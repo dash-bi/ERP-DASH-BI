@@ -141,6 +141,49 @@ ERP.db = (() => {
         return true;
     };
 
+    /**
+     * Deja el sistema en blanco para que una empresa registre su operación desde cero:
+     * borra toda la operación, incluidos los datos de demostración. Conserva los
+     * usuarios (sin ellos no se podría volver a entrar), los permisos por rol y los
+     * parámetros de IVA y nómina, que son legales y no de la demostración.
+     * empresa: { empresa, nit, capitalInicial }
+     */
+    const vaciar = (empresa = {}) => {
+        const nombre = String(empresa.empresa || '').trim();
+        if (nombre.length < 3) return fallo('Escriba la razón social de su empresa (mínimo 3 caracteres).');
+        const capital = U.roundCop(empresa.capitalInicial);
+        if (!Number.isFinite(capital) || capital < 0) return fallo('El capital inicial no puede ser negativo.');
+
+        const anterior = data.config;
+        const nuevo = emptySchema();
+        nuevo.usuarios = data.usuarios;
+        nuevo.config = {
+            ...nuevo.config,
+            ivaPct: anterior.ivaPct,
+            salarioMinimo: anterior.salarioMinimo,
+            auxilioTransporte: anterior.auxilioTransporte,
+            topeAuxilioSmmlv: anterior.topeAuxilioSmmlv,
+            aporteSaludPct: anterior.aporteSaludPct,
+            aportePensionPct: anterior.aportePensionPct,
+            permisosRol: anterior.permisosRol,
+            // Los datos de contacto eran de la empresa de demostración.
+            empresa: nombre,
+            nit: String(empresa.nit || '').trim(),
+            direccion: '',
+            ciudad: '',
+            telefono: '',
+            email: '',
+            capitalInicial: capital,
+            consecutivoVenta: 1,
+            consecutivoCompra: 1
+        };
+
+        data = nuevo;
+        if (!persist()) return fallo('El navegador no permitió guardar. Los datos se borraron solo en esta pestaña.');
+        U.bus.emit('db:changed', { motivo: 'vaciar' });
+        return { ok: true };
+    };
+
     const exportJSON = () => JSON.stringify(data, null, 2);
 
     /**
@@ -1351,7 +1394,7 @@ ERP.db = (() => {
        ============================================================ */
 
     return {
-        STORAGE_KEY, load, reset, persist, exportJSON, hashClave,
+        STORAGE_KEY, load, reset, vaciar, persist, exportJSON, hashClave,
         all, get, insert, update, remove,
         config, updateConfig,
         clientes, proveedores, productos, productoPorId, terceroPorId,

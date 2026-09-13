@@ -6,7 +6,7 @@ window.ERP = window.ERP || {};
 
 /* Versión publicada. Al cambiarla, actualizar también el ?v= de index.html
    para que el navegador no reutilice los archivos anteriores. */
-ERP.VERSION = '1.4.1';
+ERP.VERSION = '1.5.0';
 
 /* ============================================================
    Configuración del sistema (solo administrador)
@@ -279,18 +279,110 @@ ERP.configuracion = (() => {
             on: { click: guardar }
         });
 
+        const exportarRespaldo = () => {
+            if (!autorizado()) return;
+            U.downloadBlob(
+                new Blob([db.exportJSON()], { type: 'application/json' }),
+                `respaldo-erp-${U.today()}.json`
+            );
+            ui.toastOk('Respaldo generado', 'Guarde el archivo en un lugar seguro.');
+        };
+
         const btnExportar = el('button', {
             class: 'btn btn-secondary', text: '⤓ Exportar datos (JSON)', attrs: { type: 'button' },
-            on: {
-                click: () => {
-                    if (!autorizado()) return;
-                    U.downloadBlob(
-                        new Blob([db.exportJSON()], { type: 'application/json' }),
-                        `respaldo-erp-${U.today()}.json`
-                    );
-                    ui.toastOk('Respaldo generado', 'Guarde el archivo en un lugar seguro.');
+            on: { click: exportarRespaldo }
+        });
+
+        /* Borrado total para empezar con la empresa real. Se pide escribir una palabra
+           porque, a diferencia de reiniciar la demostración, no deja nada que auditar. */
+        const abrirEmpezarDeCero = () => {
+            if (!autorizado()) return;
+
+            const PALABRA = 'BORRAR';
+            const campos = {
+                empresa: ui.input({ placeholder: 'Razón social de su empresa' }),
+                nit: ui.input({ placeholder: 'Ej. 900.123.456-7' }),
+                capitalInicial: ui.input({ tipo: 'number', valor: 0, numerico: true, min: 0, step: 1000000 }),
+                confirmacion: ui.input({ placeholder: PALABRA, autocomplete: 'off' })
+            };
+            const errores = el('div');
+
+            const formulario = el('form', { class: 'stack' }, [
+                ui.banner('Esta acción no se puede deshacer',
+                    'Se borran clientes, proveedores, productos, compras, ventas, abonos, pagos, gastos, empleados, nóminas y presupuestos, incluidos los datos de demostración.',
+                    'danger'),
+                el('p', {
+                    class: 'text-muted',
+                    text: 'Se conservan los usuarios con sus contraseñas, los permisos por rol y los parámetros de IVA y nómina. Los consecutivos de facturas y compras vuelven a empezar en 1.'
+                }),
+                el('div', { class: 'row row-wrap' }, [
+                    el('button', {
+                        class: 'btn btn-secondary', text: '⤓ Exportar un respaldo antes', attrs: { type: 'button' },
+                        on: { click: exportarRespaldo }
+                    })
+                ]),
+                errores,
+                el('div', { class: 'grid-form' }, [
+                    ui.campo('Razón social', campos.empresa, { clase: 'span-full' }),
+                    ui.campo('NIT', campos.nit, { ayuda: 'Opcional. Sirve para reconocer sus facturas en PDF.' }),
+                    ui.campo('Capital inicial', campos.capitalInicial, { ayuda: 'Dinero con el que arranca la caja.' })
+                ]),
+                ui.campo(`Para confirmar, escriba ${PALABRA}`, campos.confirmacion)
+            ]);
+
+            const btnCancelar = el('button', { class: 'btn btn-secondary', text: 'Cancelar', attrs: { type: 'button' } });
+            const btnBorrar = el('button', {
+                class: 'btn btn-danger', text: 'Borrar todo y empezar', attrs: { type: 'button' }, props: { disabled: true }
+            });
+
+            const listo = () => campos.confirmacion.value.trim().toUpperCase() === PALABRA
+                && campos.empresa.value.trim().length >= 3;
+            [campos.empresa, campos.confirmacion].forEach((campo) => {
+                campo.addEventListener('input', () => { btnBorrar.disabled = !listo(); });
+            });
+
+            const ctrl = ui.modal({
+                titulo: 'Empezar desde cero',
+                subtitulo: 'Borrar todos los datos para registrar su empresa',
+                contenido: formulario,
+                acciones: [btnCancelar, btnBorrar]
+            });
+            btnCancelar.addEventListener('click', () => ctrl.cerrar());
+
+            const ejecutar = (event) => {
+                if (event) event.preventDefault();
+                U.clear(errores);
+                if (!listo()) {
+                    errores.appendChild(ui.banner('Falta confirmar',
+                        `Escriba la razón social y la palabra ${PALABRA}.`, 'warning'));
+                    return;
                 }
-            }
+                if (!autorizado()) {
+                    ctrl.cerrar();
+                    return;
+                }
+                const res = db.vaciar({
+                    empresa: campos.empresa.value,
+                    nit: campos.nit.value,
+                    capitalInicial: campos.capitalInicial.value
+                });
+                if (!res.ok) {
+                    errores.appendChild(ui.banner('No se borraron los datos', res.error, 'danger'));
+                    return;
+                }
+                ctrl.cerrar();
+                ui.toastOk('Sistema en blanco',
+                    'Complete los datos de la empresa y empiece por clientes, proveedores, productos y empleados.');
+            };
+
+            formulario.addEventListener('submit', ejecutar);
+            btnBorrar.addEventListener('click', ejecutar);
+            campos.empresa.focus();
+        };
+
+        const btnVaciar = el('button', {
+            class: 'btn btn-danger', text: 'Empezar desde cero', attrs: { type: 'button' },
+            on: { click: abrirEmpezarDeCero }
         });
 
         const btnReiniciar = el('button', {
@@ -392,7 +484,11 @@ ERP.configuracion = (() => {
                     class: 'text-muted',
                     text: `La información se guarda en el navegador (localStorage). ${db.persistente ? 'La persistencia está activa.' : 'ATENCIÓN: el navegador bloqueó el almacenamiento; los cambios se perderán al recargar.'}`
                 }),
-                el('div', { class: 'row row-wrap' }, [btnExportar, btnReiniciar])
+                el('ul', { class: 'stack-sm text-muted' }, [
+                    el('li', { text: 'Reiniciar datos de demostración: vuelve a cargar la empresa ficticia para practicar.' }),
+                    el('li', { text: 'Empezar desde cero: borra todo, incluida la demostración, para registrar su empresa real.' })
+                ]),
+                el('div', { class: 'row row-wrap' }, [btnExportar, btnReiniciar, btnVaciar])
             ])),
 
             el('div', { class: 'row row-wrap' }, [btnGuardar])

@@ -6,18 +6,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ERP y sistema de gestión financiera integral, tipo SaaS local: sitio estático sin build que guarda todo en el `localStorage` del navegador. No hay backend.
 
-- **Estructura.** La raíz del repositorio (`01-FINANZAS/`) contiene solo `vercel.json`, `.gitignore` y la carpeta `Aplicación con Claude/`. Todo lo demás vive dentro de la app, incluido este `historial.md`.
+- **Estructura.** La raíz del repositorio (`01-FINANZAS/`) contiene solo `vercel.json`, `.gitignore`, `versionar.py` y la carpeta `Aplicación con Claude/`. `versionar.py` queda fuera de la app a propósito: Vercel publica solo esa carpeta. Todo lo demás vive dentro de la app, incluido este `historial.md`.
 - **Especificación funcional.** `Aplicación con Claude/CLAUDE.md` define **qué** hace el sistema.
 - **Archivos eliminados.** El 2026-09-11 el usuario borró de la raíz `Agents.md`, `CLAUDE.md` y `README.md` porque le generaban problemas. Sus reglas vigentes están resumidas en «Convenciones del código».
 - **Idioma y moneda.** Todo en español: interfaz, mensajes, nombres de funciones y variables, comentarios y commits. Moneda COP.
 
 ## Versiones
 
-**Regla del usuario:** cada cambio al sistema se registra aquí como una versión nueva, en el mismo commit que el cambio. Al subir la versión hay que tocar tres sitios: esta tabla, `ERP.VERSION` en `app.js` y el `?v=` de los `<link>` y `<script>` de `index.html`. Se usa `MAYOR.MENOR.PARCHE`: la menor sube con funcionalidades y el parche con correcciones. El hash de la versión en curso se completa al registrar la siguiente.
+**Regla del usuario:** cada modificación de la app es una versión nueva, numerada automáticamente y registrada en el mismo commit que el cambio.
+
+Antes de cada commit, desde la raíz del repositorio:
+
+```bash
+python versionar.py parche "Qué se corrigió"      # 1.5.0 -> 1.5.1
+python versionar.py menor  "Qué se agregó"         # 1.5.0 -> 1.6.0
+python versionar.py mayor  "Cambio incompatible"   # 1.5.0 -> 2.0.0
+```
+
+El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en la pantalla de acceso), el `?v=` de todos los `<link>` y `<script>` de `index.html` y esta tabla: agrega la fila nueva y completa el commit de la versión anterior buscando el mensaje `vX.Y.Z:`. Se niega a numerar dos veces si la versión en curso aún no tiene commit. El commit se escribe con el mensaje `vX.Y.Z: resumen`. Se usa `MAYOR.MENOR.PARCHE`: la menor sube con funcionalidades y el parche con correcciones. El hash de la versión en curso se completa al registrar la siguiente.
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 1.4.1 | 2026-09-12 | *(esta versión)* | **Versión visible y sin caché:** `ERP.VERSION` se muestra en la cabecera del menú y en la pantalla de acceso, los archivos se piden con `?v=` y `vercel.json` obliga a revalidar, para poder confirmar de un vistazo qué versión sirve el navegador. |
+| 1.5.0 | 2026-09-13 | *(esta versión)* | **Empezar desde cero:** en Configuración → Datos y respaldo, un botón borra toda la operación, incluidos los datos de demostración, para registrar la empresa real. Pide razón social, NIT y capital inicial, ofrece exportar un respaldo antes y exige escribir BORRAR. Conserva usuarios, permisos por rol y parámetros de IVA y nómina; reinicia consecutivos en FV-0001 y FC-0001. **Versionado automático:** `versionar.py` numera cada versión y actualiza app.js, index.html e historial.md. |
+| 1.4.1 | 2026-09-12 | `2ab344f` | **Versión visible y sin caché:** `ERP.VERSION` se muestra en la cabecera del menú y en la pantalla de acceso, los archivos se piden con `?v=` y `vercel.json` obliga a revalidar, para poder confirmar de un vistazo qué versión sirve el navegador. |
 | 1.4.0 | 2026-09-11 | `e094632` | **Permisos por rol configurables:** en Configuración → Permisos por rol el administrador marca qué módulos ve Contador y Vendedor, y el menú, la navegación y la importación de PDF respetan esa selección al instante, también en otras pestañas. Configuración sigue siendo solo del administrador y cada rol debe conservar al menos un módulo. Al entrar se abre el tablero o, si el rol no lo tiene, su primer módulo permitido. **Limpieza de la raíz:** se eliminan `Agents.md`, `CLAUDE.md` y `README.md`; `vercel.json` y `.gitignore` permanecen en la raíz; `historial.md` pasa a la app. |
 | — | 2026-09-11 | `5fdd007`, `6cdff0a`, `ebfbcdd` | Commits hechos desde la web de GitHub («Update index.html / base.css / components.css») sin cambios de contenido. |
 | 1.3.3 | 2026-09-11 | `65eb224` | La pantalla de acceso deja de mostrar usuarios y contraseñas; contraseñas de la semilla guardadas como hash; credenciales enmascaradas en los bocetos. |
@@ -100,6 +111,13 @@ Push a `main` de `github.com/dash-bi/finanzas` → Vercel despliega solo.
 - **Inventario reversible.** `planificarInventario()` valoriza los movimientos por valor total (existencia × costo) para que revertir un documento devuelva el costo promedio exacto.
 - **Edición.** `editarVenta` / `editarCompra` / `editarAbono` **revierten el documento original y aplican el nuevo** con las mismas validaciones, conservando número, abonos y costo congelado.
 - **Errores sin excepciones.** Las funciones de negocio devuelven `{ ok: false, error }` (helper `fallo`) y la UI lo muestra en un banner.
+
+### Reiniciar y empezar desde cero
+
+- **`db.reset()`** («Reiniciar datos de demostración») regenera la empresa ficticia completa, incluidos los usuarios con sus contraseñas iniciales.
+- **`db.vaciar({ empresa, nit, capitalInicial })`** («Empezar desde cero») deja todas las colecciones vacías y reemplaza los datos de la empresa. Conserva los usuarios, `permisosRol` y los parámetros de IVA y nómina, y reinicia los consecutivos.
+  - Un sistema vacío no se vuelve a sembrar: `load()` solo siembra si no hay datos guardados o están dañados.
+  - Todos los módulos toleran colecciones vacías. Una colección nueva debe ir en `emptySchema()` para que `vaciar` la limpie.
 
 ### Esquema y migraciones
 
