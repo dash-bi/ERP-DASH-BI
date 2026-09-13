@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ERP y sistema de gestión financiera integral, tipo SaaS local: sitio estático sin build que guarda todo en el `localStorage` del navegador. No hay backend.
 
-- **Estructura.** Todo el proyecto vive en `01-FINANZAS/Aplicación con Claude/`, que es la raíz del repositorio: ahí están `.git`, `index.html`, `assets/`, `vercel.json`, `.gitignore`, `.vercelignore`, `versionar.py` y este `historial.md`. Fuera de esa carpeta no hay nada del proyecto.
+- **Estructura.** Todo el proyecto vive en `01-FINANZAS/Aplicación con Claude/`, que es la raíz del repositorio: ahí están `.git`, `index.html`, `assets/`, `vercel.json`, `.gitignore`, `.vercelignore`, `versionar.py`, `publicar_datos.py` y este `historial.md`. Fuera de esa carpeta no hay nada del proyecto.
 - **Especificación funcional.** `CLAUDE.md` (en la raíz) define **qué** hace el sistema.
 - **Archivos eliminados.** El 2026-09-11 el usuario borró de la raíz `Agents.md`, `CLAUDE.md` y `README.md` porque le generaban problemas. Sus reglas vigentes están resumidas en «Convenciones del código».
 - **Idioma y moneda.** Todo en español: interfaz, mensajes, nombres de funciones y variables, comentarios y commits. Moneda COP.
@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 1.5.2 | 2026-09-13 | *(esta versión)* | **Todo el proyecto dentro de «Aplicación con Claude»:** se movieron `.git`, `.gitignore`, `vercel.json` y `versionar.py` a la carpeta, que pasa a ser la raíz del repositorio, sin borrar nada. `vercel.json` ya no necesita `outputDirectory`, `.vercelignore` evita publicar las herramientas del repositorio y el historial de git se conserva como renombrados. |
+| 1.6.0 | 2026-09-13 | *(esta versión)* | **Datos publicados con la app:** `assets/JS/datos-publicados.js` lleva los datos de DASH-BI (8 clientes, 16 productos, 244 ventas, 60 compras, desde `respaldo-erp-2026-09-13 (1).json`). Un navegador sin datos o con la demostración intacta los carga solo; si ya tenía datos publicados sin cambios, se actualiza al publicar otros; los datos propios o editados nunca se sobrescriben y ven un aviso con el botón «Cargar datos publicados». **publicar_datos.py** genera ese archivo desde un respaldo exportado y numera la versión. |
+| 1.5.2 | 2026-09-13 | `1a72cd1` | **Todo el proyecto dentro de «Aplicación con Claude»:** se movieron `.git`, `.gitignore`, `vercel.json` y `versionar.py` a la carpeta, que pasa a ser la raíz del repositorio, sin borrar nada. `vercel.json` ya no necesita `outputDirectory`, `.vercelignore` evita publicar las herramientas del repositorio y el historial de git se conserva como renombrados. |
 | 1.5.1 | 2026-09-13 | `5b67555` | **Importar respaldo (JSON):** en Configuración → Datos y respaldo se carga un respaldo exportado para llevar los datos de un navegador, equipo o dirección a otra (por ejemplo, del archivo local a Vercel). Valida el archivo, muestra un resumen (empresa, clientes, productos, ventas, usuarios) y pide confirmar; si el navegador no puede guardar, conserva los datos actuales. Documenta que cada origen tiene sus propios datos. |
 | 1.5.0 | 2026-09-13 | `1f167af` | **Empezar desde cero:** en Configuración → Datos y respaldo, un botón borra toda la operación, incluidos los datos de demostración, para registrar la empresa real. Pide razón social, NIT y capital inicial, ofrece exportar un respaldo antes y exige escribir BORRAR. Conserva usuarios, permisos por rol y parámetros de IVA y nómina; reinicia consecutivos en FV-0001 y FC-0001. **Versionado automático:** `versionar.py` numera cada versión y actualiza app.js, index.html e historial.md. |
 | 1.4.1 | 2026-09-12 | `2ab344f` | **Versión visible y sin caché:** `ERP.VERSION` se muestra en la cabecera del menú y en la pantalla de acceso, los archivos se piden con `?v=` y `vercel.json` obliga a revalidar, para poder confirmar de un vistazo qué versión sirve el navegador. |
@@ -114,6 +115,21 @@ Push a `main` de `github.com/dash-bi/finanzas` → Vercel despliega solo.
 - **Inventario reversible.** `planificarInventario()` valoriza los movimientos por valor total (existencia × costo) para que revertir un documento devuelva el costo promedio exacto.
 - **Edición.** `editarVenta` / `editarCompra` / `editarAbono` **revierten el documento original y aplican el nuevo** con las mismas validaciones, conservando número, abonos y costo congelado.
 - **Errores sin excepciones.** Las funciones de negocio devuelven `{ ok: false, error }` (helper `fallo`) y la UI lo muestra en un banner.
+
+### Datos publicados con la app
+
+- **Qué son.** `assets/JS/datos-publicados.js` define `ERP.DATOS_PUBLICADOS = { id, fecha, archivo, datos }` y se carga antes de `db.js`. Lo genera `publicar_datos.py` desde un respaldo exportado, y el `id` es un hash del contenido. **El repositorio y el sitio son públicos**: el usuario aceptó publicar sus datos, incluidos los usuarios con contraseñas cifradas.
+- **Flujo del usuario:**
+  1. En su copia de trabajo, Exportar datos (JSON).
+  2. `python publicar_datos.py "C:/Users/VENTAS 2/Downloads/respaldo-erp-….json"`, que valida, genera el archivo y numera la versión con `versionar.py`.
+  3. Commit y push.
+- **Origen de los datos (`data.meta`).** Registra de dónde salieron los datos guardados en cada navegador: `demo` (con `elegido` si se pidió desde Configuración), `publicado` (con `publicadoId`) o `local`. `editado` se marca en `persist()` salvo en escrituras del sistema (`comoSistema`).
+- **Regla de `load()`:**
+  - Navegador sin datos: carga los publicados.
+  - Demostración que nadie pidió, o publicados anteriores sin `editado`: se reemplazan solos. Los publicados anteriores muestran el aviso «Datos actualizados».
+  - `local`, editados o demostración elegida: **nunca se sobrescriben**. Si hay publicados nuevos sobre datos editados, avisa y Configuración ofrece «Cargar datos publicados».
+- **Datos anteriores a la 1.6.0, sin `meta`.** Solo la demostración con el nombre ficticio «Distribuciones Andina S.A.S.» cuenta como desechable. Una demostración renombrada, como la copia local DASH-BI del usuario, es `local`.
+- **Balance de los datos publicados.** El respaldo DASH-BI de 2026-09-13 trae un descuadre de $0,45 por redondeo en los datos de origen. La interfaz solo advierte descuadres mayores a $1.
 
 ### Reiniciar, empezar desde cero e importar
 

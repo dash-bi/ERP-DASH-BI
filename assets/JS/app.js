@@ -6,7 +6,7 @@ window.ERP = window.ERP || {};
 
 /* Versión publicada. Al cambiarla, actualizar también el ?v= de index.html
    para que el navegador no reutilice los archivos anteriores. */
-ERP.VERSION = '1.5.2';
+ERP.VERSION = '1.6.0';
 
 /* ============================================================
    Configuración del sistema (solo administrador)
@@ -499,6 +499,55 @@ ERP.configuracion = (() => {
             on: { click: abrirEmpezarDeCero }
         });
 
+        /* Datos publicados con la aplicación: de dónde vienen los datos de este navegador
+           y opción de reemplazarlos por los que trae la versión publicada. */
+        const estadoDatos = db.estadoDatos();
+        const origenTexto = {
+            demo: 'Datos de demostración.',
+            publicado: estadoDatos.meta.editado
+                ? 'Datos publicados con la aplicación, con cambios hechos en este navegador.'
+                : 'Datos publicados con la aplicación.',
+            local: 'Datos propios de este navegador.'
+        }[estadoDatos.meta.origen] || 'Datos propios de este navegador.';
+        const pub = estadoDatos.publicacion;
+        const alDia = pub && estadoDatos.meta.origen === 'publicado' && estadoDatos.meta.publicadoId === pub.id;
+
+        const btnPublicados = pub ? el('button', {
+            class: 'btn btn-secondary', text: '⟳ Cargar datos publicados', attrs: { type: 'button' },
+            on: {
+                click: async () => {
+                    if (!autorizado()) return;
+                    const ok = await ui.confirmar({
+                        titulo: 'Cargar datos publicados',
+                        mensaje: `¿Reemplazar los datos de este navegador por los publicados de ${pub.resumen.empresa}?`,
+                        detalle: `Trae ${U.num(pub.resumen.clientes)} clientes, ${U.num(pub.resumen.productos)} productos y ${U.num(pub.resumen.ventas)} ventas. Se perderán los cambios hechos aquí: exporte un respaldo antes si desea conservarlos.`,
+                        textoAceptar: 'Reemplazar',
+                        peligroso: true
+                    });
+                    if (!ok || !autorizado()) return;
+                    const res = db.cargarPublicados();
+                    if (!res.ok) {
+                        ui.toastError('No se cargaron los datos publicados', res.error);
+                        return;
+                    }
+                    ui.toastOk('Datos publicados cargados', `${res.resumen.empresa}: ${U.num(res.resumen.ventas)} ventas.`);
+                    ERP.app.refrescar();
+                }
+            }
+        }) : null;
+
+        const avisoPublicados = el('div', { class: 'stack-sm' }, [
+            el('p', { class: 'strong', text: origenTexto }),
+            pub ? el('p', {
+                class: 'text-muted',
+                text: `Esta versión trae datos publicados de ${pub.resumen.empresa} (${U.num(pub.resumen.clientes)} clientes, ${U.num(pub.resumen.productos)} productos, ${U.num(pub.resumen.ventas)} ventas)${pub.fecha ? `, publicados el ${pub.fecha}` : ''}.${alDia ? ' Este navegador ya los tiene.' : ''}`
+            }) : null,
+            pub && !alDia && estadoDatos.meta.origen === 'publicado'
+                ? ui.banner('Hay datos publicados más recientes',
+                    'Este navegador tiene cambios propios, por eso no se actualizó solo. Puede cargarlos con el botón «Cargar datos publicados».', 'warning')
+                : null
+        ]);
+
         const btnReiniciar = el('button', {
             class: 'btn btn-danger', text: 'Reiniciar datos de demostración', attrs: { type: 'button' },
             on: {
@@ -598,12 +647,14 @@ ERP.configuracion = (() => {
                     class: 'text-muted',
                     text: `La información se guarda en este navegador (localStorage): cada navegador y cada dirección —el archivo local o el sitio publicado— tiene sus propios datos. ${db.persistente ? 'La persistencia está activa.' : 'ATENCIÓN: el navegador bloqueó el almacenamiento; los cambios se perderán al recargar.'}`
                 }),
+                avisoPublicados,
                 el('ul', { class: 'stack-sm text-muted' }, [
+                    el('li', { text: 'Cargar datos publicados: reemplaza los datos de este navegador por los que se publicaron con la aplicación.' }),
                     el('li', { text: 'Exportar e importar respaldo: pasa sus datos de un navegador, equipo o dirección a otro. Importar reemplaza los datos de este navegador.' }),
                     el('li', { text: 'Reiniciar datos de demostración: vuelve a cargar la empresa ficticia para practicar.' }),
                     el('li', { text: 'Empezar desde cero: borra todo, incluida la demostración, para registrar su empresa real.' })
                 ]),
-                el('div', { class: 'row row-wrap' }, [btnExportar, btnImportar, btnReiniciar, btnVaciar, selectorRespaldo])
+                el('div', { class: 'row row-wrap' }, [btnPublicados, btnExportar, btnImportar, btnReiniciar, btnVaciar, selectorRespaldo])
             ])),
 
             el('div', { class: 'row row-wrap' }, [btnGuardar])
@@ -998,6 +1049,15 @@ ERP.app = (() => {
             montarAplicacion();
         } else {
             pantallaAcceso();
+        }
+
+        if (carga.publicados === 'actualizados') {
+            window.setTimeout(() => ui.toastInfo('Datos actualizados',
+                `Se cargaron los datos publicados más recientes de ${carga.publicacion.empresa}.`), 900);
+        }
+        if (carga.publicadosPendientes) {
+            window.setTimeout(() => ui.toastWarn('Hay datos publicados más recientes',
+                'Este navegador tiene cambios propios. Un administrador puede cargarlos desde Configuración → Datos y respaldo.'), 900);
         }
 
         if (carga.seeded) {

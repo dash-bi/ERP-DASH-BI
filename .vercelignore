@@ -1,4 +1,5 @@
 # Archivos del repositorio que no forman parte del sitio publicado
 versionar.py
+publicar_datos.py
 .gitignore
 .vercelignore

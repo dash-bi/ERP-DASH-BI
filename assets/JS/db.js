@@ -92,10 +92,24 @@ ERP.db = (() => {
     // Durante la carga de la semilla se ejecutan cientos de transacciones:
     // se difiere la escritura y la notificación hasta el final.
     let sembrando = false;
+    // Escrituras hechas por el sistema (cargar, reiniciar, aplicar datos publicados):
+    // no cuentan como cambios del usuario sobre los datos publicados.
+    let operacionSistema = false;
+
+    const comoSistema = (fn) => {
+        const previo = operacionSistema;
+        operacionSistema = true;
+        try {
+            return fn();
+        } finally {
+            operacionSistema = previo;
+        }
+    };
 
     const persist = () => {
         if (sembrando) return true;
         if (!persistenciaActiva) return false;
+        if (!operacionSistema && data && data.meta) data.meta.editado = true;
         try {
             window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             return true;
@@ -107,38 +121,136 @@ ERP.db = (() => {
         }
     };
 
+    /* ============================================================
+       Datos publicados con la aplicación
+       assets/JS/datos-publicados.js (lo genera publicar_datos.py) puede traer
+       los datos de la empresa. data.meta registra de dónde salieron los datos
+       guardados en este navegador:
+         demo       semilla de demostración (elegido: la pidió el usuario)
+         publicado  datos publicados, con su publicadoId
+         local      datos propios de este navegador (empezar de cero, importar
+                    o anteriores a la 1.6.0)
+       editado indica que el usuario cambió algo después de cargarlos.
+       ============================================================ */
+
+    const NOMBRE_DEMO = emptySchema().config.empresa;
+
+    const datosPublicados = () => {
+        const p = window.ERP && window.ERP.DATOS_PUBLICADOS;
+        if (!p || !p.id || !p.datos) return null;
+        const revision = validarRespaldo(JSON.stringify(p.datos));
+        if (!revision.ok) {
+            console.warn('Los datos publicados no son válidos y se ignoran:', revision.error);
+            return null;
+        }
+        return { id: p.id, fecha: p.fecha || '', datos: revision.datos, resumen: revision.resumen };
+    };
+
+    /** Origen de los datos cargados. Los guardados antes de la 1.6.0 no traen meta. */
+    const origenDe = (guardado) => {
+        if (guardado.meta && guardado.meta.origen) return { editado: false, ...guardado.meta };
+        // Solo la demostración con su nombre ficticio se considera desechable;
+        // una demostración renombrada (por ejemplo, a la empresa real) es del usuario.
+        const esDemo = Boolean(guardado.config && guardado.config.fechaSemilla)
+            && guardado.config.empresa === NOMBRE_DEMO;
+        return esDemo ? { origen: 'demo', editado: false } : { origen: 'local', editado: true };
+    };
+
+    const aplicarPublicados = (pub) => {
+        data = { ...pub.datos, meta: { origen: 'publicado', publicadoId: pub.id, editado: false } };
+        migrar();
+    };
+
     const load = () => {
         persistenciaActiva = storageDisponible();
+        const pub = datosPublicados();
 
+        let guardado = null;
         if (persistenciaActiva) {
             try {
                 const raw = window.localStorage.getItem(STORAGE_KEY);
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (parsed && parsed.version === SCHEMA_VERSION && Array.isArray(parsed.ventas)) {
-                        data = { ...emptySchema(), ...parsed };
-                        data.config = { ...emptySchema().config, ...(parsed.config || {}) };
-                        if (migrar()) persist();
-                        return { ok: true, seeded: false, persistente: true };
-                    }
+                    if (parsed && parsed.version === SCHEMA_VERSION && Array.isArray(parsed.ventas)) guardado = parsed;
                 }
             } catch (error) {
-                console.warn('Datos locales ilegibles; se regenera la demostración.', error);
+                console.warn('Datos locales ilegibles; se regeneran.', error);
             }
+        }
+
+        if (guardado) {
+            data = { ...emptySchema(), ...guardado };
+            data.config = { ...emptySchema().config, ...(guardado.config || {}) };
+            data.meta = origenDe(guardado);
+
+            // Se reemplazan solos: la demostración que nadie pidió y los datos publicados
+            // anteriores que no se tocaron. Nunca los datos propios ni los editados.
+            const publicadoAnterior = data.meta.origen === 'publicado' ? data.meta.publicadoId : null;
+            const reemplazable = (data.meta.origen === 'demo' && !data.meta.elegido)
+                || (data.meta.origen === 'publicado' && !data.meta.editado);
+            if (pub && reemplazable && data.meta.publicadoId !== pub.id) {
+                aplicarPublicados(pub);
+                comoSistema(persist);
+                return {
+                    ok: true, seeded: false, persistente: true,
+                    publicados: publicadoAnterior ? 'actualizados' : 'cargados', publicacion: pub.resumen
+                };
+            }
+
+            const migro = comoSistema(migrar);
+            if (migro || !guardado.meta) comoSistema(persist);
+            return {
+                ok: true, seeded: false, persistente: true,
+                publicadosPendientes: Boolean(pub && data.meta.origen === 'publicado' && data.meta.publicadoId !== pub.id),
+                publicacion: pub ? pub.resumen : null
+            };
+        }
+
+        if (pub) {
+            aplicarPublicados(pub);
+            comoSistema(persist);
+            return { ok: true, seeded: false, persistente: persistenciaActiva, publicados: 'cargados', publicacion: pub.resumen };
         }
 
         data = emptySchema();
         seed();
-        persist();
+        data.meta = { origen: 'demo', editado: false };
+        comoSistema(persist);
         return { ok: true, seeded: true, persistente: persistenciaActiva };
     };
 
     const reset = () => {
         data = emptySchema();
         seed();
-        persist();
+        // Elegida a propósito: no la reemplazan los datos publicados al recargar.
+        data.meta = { origen: 'demo', editado: false, elegido: true };
+        comoSistema(persist);
         U.bus.emit('db:changed', { motivo: 'reset' });
         return true;
+    };
+
+    /** Reemplaza los datos de este navegador por los publicados con esta versión. */
+    const cargarPublicados = () => {
+        const pub = datosPublicados();
+        if (!pub) return fallo('Esta versión de la aplicación no trae datos publicados.');
+        const anterior = data;
+        aplicarPublicados(pub);
+        if (!comoSistema(persist)) {
+            data = anterior;
+            persistenciaActiva = storageDisponible();
+            return fallo('El navegador no permitió guardar los datos publicados. Los datos actuales no cambiaron.');
+        }
+        U.bus.emit('db:changed', { motivo: 'publicados' });
+        return { ok: true, resumen: pub.resumen };
+    };
+
+    /** Origen de los datos de este navegador y resumen de los publicados, para Configuración. */
+    const estadoDatos = () => {
+        const pub = datosPublicados();
+        return {
+            meta: { ...(data.meta || { origen: 'local', editado: true }) },
+            publicacion: pub ? { id: pub.id, fecha: pub.fecha, resumen: pub.resumen } : null
+        };
     };
 
     /**
@@ -178,6 +290,7 @@ ERP.db = (() => {
             consecutivoCompra: 1
         };
 
+        nuevo.meta = { origen: 'local', editado: true };
         data = nuevo;
         if (!persist()) return fallo('El navegador no permitió guardar. Los datos se borraron solo en esta pestaña.');
         U.bus.emit('db:changed', { motivo: 'vaciar' });
@@ -242,7 +355,7 @@ ERP.db = (() => {
         if (!revision.ok) return revision;
 
         const anterior = data;
-        data = revision.datos;
+        data = { ...revision.datos, meta: { origen: 'local', editado: true } };
         migrar();
         if (!persist()) {
             data = anterior;
@@ -1463,7 +1576,8 @@ ERP.db = (() => {
        ============================================================ */
 
     return {
-        STORAGE_KEY, load, reset, vaciar, validarRespaldo, importarRespaldo, persist, exportJSON, hashClave,
+        STORAGE_KEY, load, reset, vaciar, validarRespaldo, importarRespaldo, cargarPublicados, estadoDatos,
+        persist, exportJSON, hashClave,
         all, get, insert, update, remove,
         config, updateConfig,
         clientes, proveedores, productos, productoPorId, terceroPorId,
