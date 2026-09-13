@@ -1,7 +1,7 @@
 """
 Numera automáticamente una versión nueva del ERP.
 
-Uso (desde la raíz del repositorio):
+Uso (desde la carpeta «Aplicación con Claude», raíz del repositorio):
     python versionar.py parche "Qué se corrigió"
     python versionar.py menor  "Qué funcionalidad se agregó"
     python versionar.py mayor  "Qué cambió de forma incompatible"
@@ -22,7 +22,7 @@ import subprocess
 import sys
 
 RAIZ = pathlib.Path(__file__).resolve().parent
-APP = RAIZ / "Aplicación con Claude"
+APP = RAIZ
 ARCH_APP = APP / "assets" / "JS" / "app.js"
 ARCH_INDEX = APP / "index.html"
 ARCH_HISTORIAL = APP / "historial.md"
@@ -65,7 +65,9 @@ def main():
 
     # Si app.js ya tiene una versión distinta a la del último commit, esa versión
     # está en curso: numerar otra vez saltaría un número.
-    en_commit = PATRON_VERSION.search(git("show", "HEAD:Aplicación con Claude/assets/JS/app.js") or "")
+    # La ruta vieja cubre los commits anteriores a que la app pasara a ser la raíz.
+    en_commit = PATRON_VERSION.search(git("show", "HEAD:assets/JS/app.js")
+                                      or git("show", "HEAD:Aplicación con Claude/assets/JS/app.js") or "")
     if en_commit and tuple(int(x) for x in en_commit.groups()) != actual:
         salir(f"la versión {'.'.join(map(str, actual))} ya está numerada y falta su commit")
 

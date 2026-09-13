@@ -1,0 +1,4 @@
+# Archivos del repositorio que no forman parte del sitio publicado
+versionar.py
+.gitignore
+.vercelignore

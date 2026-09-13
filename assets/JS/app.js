@@ -6,7 +6,7 @@ window.ERP = window.ERP || {};
 
 /* Versión publicada. Al cambiarla, actualizar también el ?v= de index.html
    para que el navegador no reutilice los archivos anteriores. */
-ERP.VERSION = '1.5.1';
+ERP.VERSION = '1.5.2';
 
 /* ============================================================
    Configuración del sistema (solo administrador)

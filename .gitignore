@@ -1,16 +1,10 @@
 # ---------------------------------------------------------------
-# Construcción anterior, superada por la app actual. Se conserva
-# en disco pero no se publica: un segundo index.html competiría
-# con el de la raíz, que es el que despliega Vercel.
+# Construcción anterior, superada por la app actual. Si reaparece
+# dentro de esta carpeta no se publica: un segundo index.html
+# competiría con el de la raíz, que es el que despliega Vercel.
 # ---------------------------------------------------------------
 /_version-anterior/
-
-# ---------------------------------------------------------------
-# Build paralela ajena a este repositorio (creada el 09/09/2026).
-# No se publica para no mezclar dos implementaciones distintas.
-# Si debe formar parte del proyecto, quitar esta línea.
-# ---------------------------------------------------------------
-/assets/JS/modules/
+/Version vieja/
 
 # --- Secretos: nunca deben llegar al repositorio ---
 .env
@@ -35,6 +29,3 @@ desktop.ini
 *.bak
 .vscode/
 .idea/
-
-# Archivos de trabajo del lienzo de diseño
-/.design/

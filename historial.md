@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ERP y sistema de gestión financiera integral, tipo SaaS local: sitio estático sin build que guarda todo en el `localStorage` del navegador. No hay backend.
 
-- **Estructura.** La raíz del repositorio (`01-FINANZAS/`) contiene solo `vercel.json`, `.gitignore`, `versionar.py` y la carpeta `Aplicación con Claude/`. `versionar.py` queda fuera de la app a propósito: Vercel publica solo esa carpeta. Todo lo demás vive dentro de la app, incluido este `historial.md`.
-- **Especificación funcional.** `Aplicación con Claude/CLAUDE.md` define **qué** hace el sistema.
+- **Estructura.** Todo el proyecto vive en `01-FINANZAS/Aplicación con Claude/`, que es la raíz del repositorio: ahí están `.git`, `index.html`, `assets/`, `vercel.json`, `.gitignore`, `.vercelignore`, `versionar.py` y este `historial.md`. Fuera de esa carpeta no hay nada del proyecto.
+- **Especificación funcional.** `CLAUDE.md` (en la raíz) define **qué** hace el sistema.
 - **Archivos eliminados.** El 2026-09-11 el usuario borró de la raíz `Agents.md`, `CLAUDE.md` y `README.md` porque le generaban problemas. Sus reglas vigentes están resumidas en «Convenciones del código».
 - **Idioma y moneda.** Todo en español: interfaz, mensajes, nombres de funciones y variables, comentarios y commits. Moneda COP.
 
@@ -15,7 +15,7 @@ ERP y sistema de gestión financiera integral, tipo SaaS local: sitio estático 
 
 **Regla del usuario:** cada modificación de la app es una versión nueva, numerada automáticamente y registrada en el mismo commit que el cambio.
 
-Antes de cada commit, desde la raíz del repositorio:
+Antes de cada commit, desde la raíz del repositorio (la carpeta «Aplicación con Claude»):
 
 ```bash
 python versionar.py parche "Qué se corrigió"      # 1.5.0 -> 1.5.1
@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 1.5.1 | 2026-09-13 | *(esta versión)* | **Importar respaldo (JSON):** en Configuración → Datos y respaldo se carga un respaldo exportado para llevar los datos de un navegador, equipo o dirección a otra (por ejemplo, del archivo local a Vercel). Valida el archivo, muestra un resumen (empresa, clientes, productos, ventas, usuarios) y pide confirmar; si el navegador no puede guardar, conserva los datos actuales. Documenta que cada origen tiene sus propios datos. |
+| 1.5.2 | 2026-09-13 | *(esta versión)* | **Todo el proyecto dentro de «Aplicación con Claude»:** se movieron `.git`, `.gitignore`, `vercel.json` y `versionar.py` a la carpeta, que pasa a ser la raíz del repositorio, sin borrar nada. `vercel.json` ya no necesita `outputDirectory`, `.vercelignore` evita publicar las herramientas del repositorio y el historial de git se conserva como renombrados. |
+| 1.5.1 | 2026-09-13 | `5b67555` | **Importar respaldo (JSON):** en Configuración → Datos y respaldo se carga un respaldo exportado para llevar los datos de un navegador, equipo o dirección a otra (por ejemplo, del archivo local a Vercel). Valida el archivo, muestra un resumen (empresa, clientes, productos, ventas, usuarios) y pide confirmar; si el navegador no puede guardar, conserva los datos actuales. Documenta que cada origen tiene sus propios datos. |
 | 1.5.0 | 2026-09-13 | `1f167af` | **Empezar desde cero:** en Configuración → Datos y respaldo, un botón borra toda la operación, incluidos los datos de demostración, para registrar la empresa real. Pide razón social, NIT y capital inicial, ofrece exportar un respaldo antes y exige escribir BORRAR. Conserva usuarios, permisos por rol y parámetros de IVA y nómina; reinicia consecutivos en FV-0001 y FC-0001. **Versionado automático:** `versionar.py` numera cada versión y actualiza app.js, index.html e historial.md. |
 | 1.4.1 | 2026-09-12 | `2ab344f` | **Versión visible y sin caché:** `ERP.VERSION` se muestra en la cabecera del menú y en la pantalla de acceso, los archivos se piden con `?v=` y `vercel.json` obliga a revalidar, para poder confirmar de un vistazo qué versión sirve el navegador. |
 | 1.4.0 | 2026-09-11 | `e094632` | **Permisos por rol configurables:** en Configuración → Permisos por rol el administrador marca qué módulos ve Contador y Vendedor, y el menú, la navegación y la importación de PDF respetan esa selección al instante, también en otras pestañas. Configuración sigue siendo solo del administrador y cada rol debe conservar al menos un módulo. Al entrar se abre el tablero o, si el rol no lo tiene, su primer módulo permitido. **Limpieza de la raíz:** se eliminan `Agents.md`, `CLAUDE.md` y `README.md`; `vercel.json` y `.gitignore` permanecen en la raíz; `historial.md` pasa a la app. |
@@ -43,18 +44,18 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 ## Comandos
 
-No hay `package.json`, build, tests automatizados ni linter. Rutas relativas a la raíz del repositorio.
+No hay `package.json`, build, tests automatizados ni linter. Rutas relativas a la raíz del repositorio (la carpeta «Aplicación con Claude»).
 
 ```bash
 # Servir la app (también abre con doble clic en index.html: son scripts clásicos)
-cd "Aplicación con Claude" && python -m http.server 8000
+python -m http.server 8000
 
 # Sintaxis de todos los scripts
-for f in "Aplicación con Claude"/assets/JS/*.js; do node --check "$f" || echo "FALLA: $f"; done
+for f in assets/JS/*.js; do node --check "$f" || echo "FALLA: $f"; done
 
 # Reglas absolutas del código: no debe imprimir nada.
 # El patrón ignora var(--css), ui.confirmar() y comentarios que nombran confirm() o innerHTML.
-grep -rnE '\bvar\s+[A-Za-z_$]|\.innerHTML|\b(alert|confirm|prompt)\([^)]' "Aplicación con Claude/assets/JS"
+grep -rnE '\bvar\s+[A-Za-z_$]|\.innerHTML|\b(alert|confirm|prompt)\([^)]' assets/JS
 ```
 
 `http.server` deja que el navegador cachee los JS: recargar con Ctrl+F5 tras cada cambio.
@@ -71,7 +72,8 @@ grep -rnE '\bvar\s+[A-Za-z_$]|\.innerHTML|\b(alert|confirm|prompt)\([^)]' "Aplic
 
 Push a `main` de `github.com/dash-bi/finanzas` → Vercel despliega solo.
 
-- **`vercel.json` debe quedarse en la raíz del repositorio**, con `outputDirectory: "Aplicación con Claude"`. Si se mueve dentro de la app, el sitio responde 404. **Root Directory** en Vercel debe quedar vacío.
+- **`index.html` y `vercel.json` están en la raíz del repositorio**, así que Vercel publica la raíz sin `outputDirectory`. **Root Directory** en cada proyecto de Vercel debe quedar **vacío**: si apunta a «Aplicación con Claude», el build falla porque esa subcarpeta ya no existe dentro del repositorio.
+- **`.vercelignore`** evita publicar `versionar.py` y los archivos de configuración de git.
 - **Protección de Vercel.** `finanzas-dash-bi.vercel.app` tiene Deployment Protection y redirige al login de Vercel.
 - **Versión vieja en producción.** Revisar en Vercel que el despliegue *Current* sea el último commit; un Instant Rollback lo deja fijo.
 
@@ -163,6 +165,8 @@ Reglas que el usuario fijó al construir el sistema. Venían de `Agents.md` y si
 - **Ante una duda que afecte el resultado**, preguntar al usuario en lugar de decidir.
 
 ## Contexto que no se deduce del código
+
+- **2026-09-13, reorganización (1.5.2).** A pedido del usuario, todo el proyecto quedó dentro de «Aplicación con Claude»: se movieron `.git`, `.gitignore`, `vercel.json` y `versionar.py` desde `01-FINANZAS/`, sin borrar nada, porque la app o el flujo de trabajo los usan. Git registró los archivos como renombrados, así que el historial se conserva. Hasta la versión 1.5.1 las rutas del repositorio empiezan por `Aplicación con Claude/`.
 
 - **El repositorio está dentro de Google Drive** (`G:\Mi unidad`), y archivos y carpetas han aparecido, desaparecido o cambiado de lugar por acciones externas. Antes de cada commit, revisar `git status`, verificar con `git fetch` si GitHub tiene commits nuevos y no subir borrados masivos ni carpetas nuevas sin confirmar con el usuario.
 - **Versión anterior del sistema.** Existió en `_version-anterior/` y luego en `Version vieja/`, y nunca se publicó. Si reaparece, no debe subirse: un segundo `index.html` competiría con el despliegue.
