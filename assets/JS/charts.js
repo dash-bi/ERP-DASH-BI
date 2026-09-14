@@ -267,6 +267,43 @@ ERP.charts = (() => {
        opts: { items:[{etiqueta, valor}], formato, alto }
        ============================================================ */
 
+    /**
+     * Minigráfica de tendencia para acompañar un indicador: sin ejes ni tooltip,
+     * porque la cifra exacta ya está en la tarjeta.
+     */
+    const chispa = (opts) => {
+        const datos = (opts.datos || []).map((d) => U.toNumber(d));
+        const cont = el('div', { class: 'chart-chispa' });
+        if (datos.length < 2) return cont;
+
+        const tono = opts.color || 'var(--c1)';
+        const ancho = 120;
+        const alto = opts.alto || 34;
+        const max = Math.max(...datos, 0);
+        const min = Math.min(...datos, 0);
+        const rango = max - min || 1;
+        const x = (i) => (i / (datos.length - 1)) * ancho;
+        const y = (v) => alto - 3 - ((v - min) / rango) * (alto - 6);
+        const puntos = datos.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+
+        cont.appendChild(svgEl('svg', {
+            viewBox: `0 0 ${ancho} ${alto}`,
+            preserveAspectRatio: 'none',
+            'aria-hidden': 'true',
+            focusable: 'false'
+        }, [
+            svgEl('polygon', {
+                points: `0,${alto} ${puntos} ${ancho},${alto}`,
+                style: `fill:${tono};opacity:0.16`
+            }),
+            svgEl('polyline', {
+                points: puntos,
+                style: `fill:none;stroke:${tono};stroke-width:2;stroke-linejoin:round;stroke-linecap:round`
+            })
+        ]));
+        return cont;
+    };
+
     const dona = (opts) => {
         const items = (opts.items || []).filter((it) => U.toNumber(it.valor) > 0);
         const fmt = opts.formato || U.money;
@@ -517,5 +554,5 @@ ERP.charts = (() => {
         ]);
     };
 
-    return { lineas, barras, dona, puntoEquilibrio, barrasComparadas, color, PALETA };
+    return { lineas, barras, chispa, dona, puntoEquilibrio, barrasComparadas, color, PALETA };
 })();

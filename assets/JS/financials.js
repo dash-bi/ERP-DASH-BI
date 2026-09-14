@@ -227,6 +227,37 @@ ERP.finanzas = (() => {
         };
     };
 
+    /**
+     * Cartera abierta repartida por antigüedad del vencimiento. Usa el saldo vigente
+     * de cada factura, el mismo que alimenta cuentas por cobrar.
+     */
+    const carteraPorAntiguedad = (hasta) => {
+        const corte = hasta || U.today();
+        const tramos = [
+            { etiqueta: 'Al día', valor: 0, facturas: 0 },
+            { etiqueta: '1 a 30 días', valor: 0, facturas: 0 },
+            { etiqueta: '31 a 60 días', valor: 0, facturas: 0 },
+            { etiqueta: '61 a 90 días', valor: 0, facturas: 0 },
+            { etiqueta: 'Más de 90 días', valor: 0, facturas: 0 }
+        ];
+
+        db.all('ventas')
+            .filter((v) => !v.anulada && v.fecha <= corte && U.toNumber(v.saldo) > 0)
+            .forEach((venta) => {
+                const vencimiento = venta.fechaVencimiento || venta.fecha;
+                const dias = U.daysBetween(vencimiento, corte);
+                const i = dias <= 0 ? 0 : dias <= 30 ? 1 : dias <= 60 ? 2 : dias <= 90 ? 3 : 4;
+                tramos[i].valor = U.roundCop(tramos[i].valor + U.toNumber(venta.saldo));
+                tramos[i].facturas += 1;
+            });
+
+        return {
+            tramos,
+            total: U.roundCop(U.sum(tramos, (t) => t.valor)),
+            vencida: U.roundCop(U.sum(tramos.slice(1), (t) => t.valor))
+        };
+    };
+
     /* ---------- Series temporales ---------- */
 
     const serieMensual = (desde, hasta) => {
@@ -323,7 +354,7 @@ ERP.finanzas = (() => {
         estadoResultados, balanceGeneral, flujoCaja, movimientosCaja, saldoCaja,
         indicadores, serieMensual, presupuestoVsReal, definirPresupuesto,
         productosMasVendidos, costoDeVenta,
-        cuentasPorCobrar, cuentasPorPagar, inventarioContable, inventarioFisico
+        cuentasPorCobrar, cuentasPorPagar, carteraPorAntiguedad, inventarioContable, inventarioFisico
     };
 })();
 

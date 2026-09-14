@@ -839,3 +839,68 @@ table.data td.wrap { white-space: normal; min-width: 190px; font-weight: 600; }
     .toast-stack { right: var(--sp-3); left: var(--sp-3); bottom: var(--sp-3); max-width: none; }
     .totals { width: 100%; }
 }
+
+
+/* ---------- Tablero ejecutivo ---------- */
+
+/* Los filtros mandan en el tablero: siguen a la vista al desplazarse. */
+.dash-filtros { position: sticky; top: 0; z-index: 20; }
+
+.kpi-hero-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-4); }
+.kpi-mini-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--sp-3); }
+
+.kpi-hero { display: flex; flex-direction: column; gap: 7px; }
+.kpi-hero .kpi-value { font-size: 1.85rem; }
+.kpi-hero .chart-chispa { margin-top: auto; padding-top: var(--sp-3); }
+
+.kpi-delta {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi-delta.pos { color: var(--success); }
+.kpi-delta.neg { color: var(--danger); }
+.kpi-delta.neutro { color: var(--text-soft); }
+.kpi-delta .kpi-delta-ref { color: var(--text-soft); font-weight: 500; font-size: 0.72rem; }
+
+.kpi-mini { padding: 14px 18px; }
+.kpi-mini::before { top: 17px; left: 18px; width: 6px; height: 6px; }
+.kpi-mini .kpi-label { font-size: 0.63rem; padding-left: 13px; }
+.kpi-mini .kpi-value { font-size: 1.1rem; }
+.kpi-mini .kpi-context { font-size: 0.7rem; }
+
+.chart-chispa svg { display: block; width: 100%; height: 34px; }
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--sp-4);
+    align-items: start;
+}
+
+.dash-grid > .span-4 { grid-column: span 4; }
+.dash-grid > .span-5 { grid-column: span 5; }
+.dash-grid > .span-7 { grid-column: span 7; }
+.dash-grid > .span-8 { grid-column: span 8; }
+.dash-grid > .span-12 { grid-column: span 12; }
+
+@media (max-width: 1180px) {
+    .kpi-hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kpi-mini-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .dash-grid > .span-4,
+    .dash-grid > .span-5,
+    .dash-grid > .span-7,
+    .dash-grid > .span-8 { grid-column: span 12; }
+}
+
+@media (max-width: 640px) {
+    .kpi-hero-grid { grid-template-columns: 1fr; }
+    .kpi-mini-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dash-filtros { position: static; }
+    .kpi-hero .kpi-value { font-size: 1.6rem; }
+}
