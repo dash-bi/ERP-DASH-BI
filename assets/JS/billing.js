@@ -788,10 +788,6 @@ ERP.ventas = (() => {
                         on: { click: () => exportar(tabla.filas()) }
                     }),
                     el('button', {
-                        class: 'btn btn-secondary', text: 'Cargar factura PDF', attrs: { type: 'button' },
-                        on: { click: () => ERP.importador.abrir('venta') }
-                    }),
-                    el('button', {
                         class: 'btn', text: '+ Nueva venta', attrs: { type: 'button' },
                         on: { click: () => abrirFormulario() }
                     })
