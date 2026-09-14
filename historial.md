@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 1.6.0 | 2026-09-13 | *(esta versión)* | **Datos publicados con la app:** `assets/JS/datos-publicados.js` lleva los datos de DASH-BI (8 clientes, 16 productos, 244 ventas, 60 compras, desde `respaldo-erp-2026-09-13 (1).json`). Un navegador sin datos o con la demostración intacta los carga solo; si ya tenía datos publicados sin cambios, se actualiza al publicar otros; los datos propios o editados nunca se sobrescriben y ven un aviso con el botón «Cargar datos publicados». **publicar_datos.py** genera ese archivo desde un respaldo exportado y numera la versión. |
+| 1.6.1 | 2026-09-14 | *(esta versión)* | **Repositorio nuevo:** la app pasa a `github.com/dash-bi/ERP-DASH-BI` (remoto `origin`) con toda su historia; el anterior queda como remoto `finanzas`, sin uso. |
+| 1.6.0 | 2026-09-13 | `0a4a39d` | **Datos publicados con la app:** `assets/JS/datos-publicados.js` lleva los datos de DASH-BI (8 clientes, 16 productos, 244 ventas, 60 compras, desde `respaldo-erp-2026-09-13 (1).json`). Un navegador sin datos o con la demostración intacta los carga solo; si ya tenía datos publicados sin cambios, se actualiza al publicar otros; los datos propios o editados nunca se sobrescriben y ven un aviso con el botón «Cargar datos publicados». **publicar_datos.py** genera ese archivo desde un respaldo exportado y numera la versión. |
 | 1.5.2 | 2026-09-13 | `1a72cd1` | **Todo el proyecto dentro de «Aplicación con Claude»:** se movieron `.git`, `.gitignore`, `vercel.json` y `versionar.py` a la carpeta, que pasa a ser la raíz del repositorio, sin borrar nada. `vercel.json` ya no necesita `outputDirectory`, `.vercelignore` evita publicar las herramientas del repositorio y el historial de git se conserva como renombrados. |
 | 1.5.1 | 2026-09-13 | `5b67555` | **Importar respaldo (JSON):** en Configuración → Datos y respaldo se carga un respaldo exportado para llevar los datos de un navegador, equipo o dirección a otra (por ejemplo, del archivo local a Vercel). Valida el archivo, muestra un resumen (empresa, clientes, productos, ventas, usuarios) y pide confirmar; si el navegador no puede guardar, conserva los datos actuales. Documenta que cada origen tiene sus propios datos. |
 | 1.5.0 | 2026-09-13 | `1f167af` | **Empezar desde cero:** en Configuración → Datos y respaldo, un botón borra toda la operación, incluidos los datos de demostración, para registrar la empresa real. Pide razón social, NIT y capital inicial, ofrece exportar un respaldo antes y exige escribir BORRAR. Conserva usuarios, permisos por rol y parámetros de IVA y nómina; reinicia consecutivos en FV-0001 y FC-0001. **Versionado automático:** `versionar.py` numera cada versión y actualiza app.js, index.html e historial.md. |
@@ -71,7 +72,7 @@ grep -rnE '\bvar\s+[A-Za-z_$]|\.innerHTML|\b(alert|confirm|prompt)\([^)]' assets
 
 ### Despliegue
 
-Push a `main` de `github.com/dash-bi/finanzas` → Vercel despliega solo.
+Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Vercel despliega solo. El repositorio anterior, `github.com/dash-bi/finanzas`, quedó como remoto `finanzas` y ya no se usa; conserva la historia hasta la 1.6.0.
 
 - **`index.html` y `vercel.json` están en la raíz del repositorio**, así que Vercel publica la raíz sin `outputDirectory`. **Root Directory** en cada proyecto de Vercel debe quedar **vacío**: si apunta a «Aplicación con Claude», el build falla porque esa subcarpeta ya no existe dentro del repositorio.
 - **`.vercelignore`** evita publicar `versionar.py` y los archivos de configuración de git.
