@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 1.7.0 | 2026-09-14 | *(esta versión)* | **Tablero ejecutivo rediseñado:** jerarquía real de indicadores (4 principales con variación contra el periodo anterior y minigráfica de tendencia, 6 secundarios compactos), rejilla de 12 columnas con Ventas contra gastos, Cartera por antigüedad, Productos más vendidos y Distribución de gastos, barra de filtros fija al desplazarse y estado vacío explicado con acciones. Nuevo cálculo `ERP.finanzas.carteraPorAntiguedad` y nueva minigráfica `ERP.charts.chispa`. |
+| 1.7.1 | 2026-09-14 | *(esta versión)* | **Migración a Supabase, etapa 1:** esquema de 14 tablas con RLS por empresa y por módulo creado en el proyecto «ERP Financiero» (supabase/001_esquema_inicial.sql y 002_funciones_permisos_privadas.sql), probado con usuarios simulados. La app todavía usa localStorage. |
+| 1.7.0 | 2026-09-14 | `ef83a47` | **Tablero ejecutivo rediseñado:** jerarquía real de indicadores (4 principales con variación contra el periodo anterior y minigráfica de tendencia, 6 secundarios compactos), rejilla de 12 columnas con Ventas contra gastos, Cartera por antigüedad, Productos más vendidos y Distribución de gastos, barra de filtros fija al desplazarse y estado vacío explicado con acciones. Nuevo cálculo `ERP.finanzas.carteraPorAntiguedad` y nueva minigráfica `ERP.charts.chispa`. |
 | 1.6.2 | 2026-09-14 | `c6b0fb8` | **Ventas sin «Cargar factura PDF»:** se retira ese botón de la pestaña de Ventas. Compras y Gastos lo conservan, y una factura de venta leída desde allí sigue abriendo el formulario de ventas prellenado. |
 | 1.6.1 | 2026-09-14 | `222fce4` | **Repositorio nuevo:** la app pasa a `github.com/dash-bi/ERP-DASH-BI` (remoto `origin`) con toda su historia; el anterior queda como remoto `finanzas`, sin uso. |
 | 1.6.0 | 2026-09-13 | `0a4a39d` | **Datos publicados con la app:** `assets/JS/datos-publicados.js` lleva los datos de DASH-BI (8 clientes, 16 productos, 244 ventas, 60 compras, desde `respaldo-erp-2026-09-13 (1).json`). Un navegador sin datos o con la demostración intacta los carga solo; si ya tenía datos publicados sin cambios, se actualiza al publicar otros; los datos propios o editados nunca se sobrescriben y ven un aviso con el botón «Cargar datos publicados». **publicar_datos.py** genera ese archivo desde un respaldo exportado y numera la versión. |
@@ -118,6 +119,30 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 - **Inventario reversible.** `planificarInventario()` valoriza los movimientos por valor total (existencia × costo) para que revertir un documento devuelva el costo promedio exacto.
 - **Edición.** `editarVenta` / `editarCompra` / `editarAbono` **revierten el documento original y aplican el nuevo** con las mismas validaciones, conservando número, abonos y costo congelado.
 - **Errores sin excepciones.** Las funciones de negocio devuelven `{ ok: false, error }` (helper `fallo`) y la UI lo muestra en un banner.
+
+### Migración a Supabase (en curso)
+
+- **Proyecto:** «ERP Financiero», ref `nxilhcgjjzluywfinicd` (us-east-1, PostgreSQL 17). Claude Code accede por el conector MCP de Supabase ya autenticado; no hay `.mcp.json` en el repositorio.
+- **Objetivo aprobado por el usuario:** reemplazar `localStorage` por una base compartida, con Supabase Auth y reglas por rol, para que local, Vercel y cualquier equipo vean los mismos datos. Al terminar, `datos-publicados.js` dejará de ser necesario y los datos saldrán del repositorio público.
+- **Etapas:**
+  1. **Esquema. HECHO el 2026-09-14.** `supabase/001_esquema_inicial.sql` y `supabase/002_funciones_permisos_privadas.sql` están aplicados.
+  2. **Migración de datos DASH-BI. PENDIENTE.** Necesita un correo por usuario: las contraseñas djb2 no se pueden migrar a Supabase Auth.
+  3. **Conexión de la app. PENDIENTE.** Funciones transaccionales para registrar ventas, compras, abonos y pagos (existencias, costo ponderado y saldos en una operación), y reemplazo de `db.js` módulo por módulo.
+- **Modelo:**
+  - 14 tablas con `empresa_id`, que permiten varias empresas.
+  - Los `id` son texto: se conservan los actuales al migrar y los nuevos reciben un UUID.
+  - Dinero en `numeric(16,2)`, costo promedio en `numeric(16,4)` y cantidades en `numeric(14,3)`.
+  - Ítems de venta y compra en tablas hijas.
+  - `empresas` reemplaza `config`, incluidos `permisos_rol` y los consecutivos.
+  - `perfiles` enlaza `auth.users` con usuario, nombre y rol.
+- **Seguridad (RLS en todas las tablas):**
+  - Lectura: cualquier usuario activo de la empresa.
+  - Escritura: solo si `privado.puede_modulo(<módulo>)`, la misma regla que `ERP.auth.modulosDeRol`.
+  - `empresas` y `perfiles` solo los modifica el administrador.
+  - `privado.empresa_actual()`, `privado.rol_actual()` y `privado.puede_modulo()` no están expuestas en la API.
+  - `public.tomar_consecutivo('venta'|'compra')` numera de forma atómica. Es el único aviso restante del asesor de seguridad, y es intencional.
+- **Verificado:** con una transacción revertida y usuarios simulados, el vendedor lee su empresa, crea clientes y numera ventas (FV-0001, FV-0002), pero no crea gastos, no escribe en otra empresa, no modifica la empresa ni numera compras. Otra empresa solo ve sus datos y un usuario sin sesión no ve nada. La base quedó vacía tras la prueba.
+- **Al tocar el esquema:** aplicar con `apply_migration`, guardar la misma migración como `supabase/00N_*.sql` y volver a revisar los asesores de seguridad y rendimiento. `supabase/` está en `.vercelignore`.
 
 ### Datos publicados con la app
 

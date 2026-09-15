@@ -3,3 +3,4 @@ versionar.py
 publicar_datos.py
 .gitignore
 .vercelignore
+supabase/
