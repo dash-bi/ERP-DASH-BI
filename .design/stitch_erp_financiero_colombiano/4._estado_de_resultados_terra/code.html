@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&amp;family=Nunito+Sans:ital,opsz,wght@0,6..12,300..800;1,6..12,300..800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.tabular-nums{font-variant-numeric:tabular-nums;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"tertiary":"#705c30","on-primary-container":"#d8f0de","error":"#b83230","surface-container":"#f0ece4","on-primary-fixed":"#002110","primary-fixed":"#c8e8d0","on-secondary-container":"#5e5548","on-tertiary-fixed-variant":"#554020","inverse-on-surface":"#f5f0e8","primary":"#4a7c59","inverse-primary":"#8ecf9e","on-surface":"#2e3230","on-secondary-fixed-variant":"#4a4538","on-error-container":"#690005","on-background":"#2e3230","background":"#faf6f0","surface-container-lowest":"#ffffff","surface-container-highest":"#e4e0d8","on-primary-fixed-variant":"#2a6038","on-surface-variant":"#4a4e4a","on-secondary":"#ffffff","on-tertiary-container":"#554020","outline-variant":"#c4c8bc","secondary":"#6b6358","on-tertiary":"#ffffff","tertiary-container":"#c4a66a","on-primary":"#ffffff","secondary-fixed-dim":"#d4ccbf","on-error":"#ffffff","surface":"#faf6f0","surface-dim":"#dbd7cf","surface-variant":"#e4e0d8","on-secondary-fixed":"#1e1a13","secondary-container":"#f0e8db","tertiary-fixed-dim":"#dcc48e","surface-container-high":"#eae6de","surface-tint":"#4a7c59","on-tertiary-fixed":"#221a05","outline":"#74796e","inverse-surface":"#2e3230","tertiary-fixed":"#f8e0a8","primary-fixed-dim":"#8ecf9e","surface-container-low":"#f5f1ea","surface-bright":"#faf6f0","primary-container":"#78a886","secondary-fixed":"#f0e8db","error-container":"#ffdad8"},borderRadius:{DEFAULT:"0.5rem",lg:"0.75rem",xl:"0.75rem","2xl":"1rem",full:"9999px"},spacing:{"margin":"1rem","gutter":"1rem","space-xs":"0.25rem","space-lg":"1.25rem","space-sm":"0.5rem","margin-md":"1.5rem","space-xl":"2rem","gutter-lg":"1.5rem","space-md":"0.75rem","margin-lg":"2rem"},fontFamily:{"headline":["Literata","serif"],"display":["Literata","serif"],"body":["Nunito Sans","sans-serif"],"label":["Nunito Sans","sans-serif"],"mono":["JetBrains Mono","monospace"]},fontSize:{"body-sm":["12px",{lineHeight:"16px",fontWeight:"400"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"body-lg":["16px",{lineHeight:"24px",letterSpacing:"-0.005em",fontWeight:"400"}],"currency-md":["14px",{lineHeight:"20px",fontWeight:"500"}],"headline-xl-mobile":["26px",{lineHeight:"34px",letterSpacing:"-0.015em",fontWeight:"700"}],"fiscal-id":["12px",{lineHeight:"16px",letterSpacing:"0.02em",fontWeight:"500"}],"headline-md":["20px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"headline-lg":["24px",{lineHeight:"32px",letterSpacing:"-0.015em",fontWeight:"600"}],"currency-lg":["24px",{lineHeight:"32px",letterSpacing:"-0.02em",fontWeight:"600"}],"label-md":["13px",{lineHeight:"18px",fontWeight:"500"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"600"}],"headline-xl":["32px",{lineHeight:"40px",letterSpacing:"-0.02em",fontWeight:"700"}]}}}}</script></head><body class="bg-surface font-body text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low/95 backdrop-blur-xl border-r border-outline-variant/30 shadow-[0_4px_20px_rgba(46,50,48,0.03)] z-50 flex flex-col justify-between transition-all duration-300" id="app-sidebar"><div class="flex flex-col h-full overflow-hidden"><div class="h-16 px-space-md flex items-center justify-between shrink-0 bg-surface-container/60 border-b border-outline-variant/30"><div class="flex items-center gap-space-sm overflow-hidden"><img alt="ContaPyme Pro Logo" class="h-8 w-auto object-contain shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1Xm_VqYFajQ8Kcew_ClHq-E9OG89zkG3XTrwc8oxFhwDiOBmqiDcgzukDzlcjHMUr7YYEL2U7AVWNCyIMM21LkH1mmaR72G5B6Lbu6ZoWDtdKGBMX9klYwgEVwFN5OdXI_HOYYrEWzZ-rMx2nCmD2scPkuj8wO5BFMXzzHUYa42H9XNvTDVbp8ffQSF1l_DMhhMmYIJ4pU_SoUDX8Er3k6_fy0er71xdS3tbTwnrEelDgCbRF2iOsM8qok"/><div class="flex flex-col truncate"><span class="font-headline text-lg font-bold tracking-tight text-primary leading-none">ContaPyme</span><span class="font-label text-[10px] uppercase tracking-wider text-secondary font-bold">Pro DIAN Cloud</span></div></div><button class="p-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" id="sidebar-collapse-btn" type="button"><span class="material-symbols-outlined text-[20px]">menu_open</span></button></div><nav class="flex-1 overflow-y-auto px-space-sm py-space-sm space-y-space-md"><div class="space-y-space-xs"><p class="px-space-sm font-label text-[11px] uppercase tracking-wider text-secondary font-bold">General</p><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">dashboard</span><span class="font-body text-sm truncate">Dashboard</span></a></div><div class="space-y-space-xs"><p class="px-space-sm font-label text-[11px] uppercase tracking-wider text-secondary font-bold">Operación</p><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="clientes-y-proveedores" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">groups</span><span class="font-body text-sm truncate">Clientes y Proveedores</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="inventario" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">inventory_2</span><span class="font-body text-sm truncate">Inventario</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="compras-y-gastos" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">shopping_cart</span><span class="font-body text-sm truncate">Compras y Gastos</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="ventas-y-facturacion" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">point_of_sale</span><span class="font-body text-sm truncate">Ventas y Facturación</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="abonos" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">payments</span><span class="font-body text-sm truncate">Abonos</span></a></div><div class="space-y-space-xs"><p class="px-space-sm font-label text-[11px] uppercase tracking-wider text-secondary font-bold">Finanzas</p><a aria-current="page" class="flex items-center gap-space-sm px-space-sm py-space-xs transition-all group bg-primary text-on-primary font-bold rounded-xl shadow-sm" data-path="estado-de-resultados" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">query_stats</span><span class="font-body text-sm truncate">Estado de Resultados</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="balance-general" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">account_balance</span><span class="font-body text-sm truncate">Balance General</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="flujo-de-caja" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">water_drop</span><span class="font-body text-sm truncate">Flujo de Caja</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="presupuesto-vs-real" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">compare_arrows</span><span class="font-body text-sm truncate">Presupuesto vs. Real</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="indicadores" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">speed</span><span class="font-body text-sm truncate">Indicadores</span></a></div><div class="space-y-space-xs"><p class="px-space-sm font-label text-[11px] uppercase tracking-wider text-secondary font-bold">Herramientas</p><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="punto-de-equilibrio" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">balance</span><span class="font-body text-sm truncate">Punto de Equilibrio</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="simulador-de-prestamos" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">calculate</span><span class="font-body text-sm truncate">Simulador de Préstamos</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group" data-path="liquidacion-de-nomina" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">badge</span><span class="font-body text-sm truncate">Liquidación de Nómina</span></a></div></nav><div class="p-space-sm shrink-0 bg-surface-container-low border-t border-outline-variant/30"><div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm"><div class="flex items-center gap-space-xs text-primary"><span class="material-symbols-outlined text-[18px]">verified</span><span class="font-label text-xs font-bold">DIAN Conectado</span></div><span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span></div></div></div></aside><div class="pl-64 flex flex-col min-h-screen bg-background"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_2px_12px_rgba(46,50,48,0.03)] z-40 flex items-center justify-between px-margin-lg"><div class="flex items-center gap-space-md"><button class="flex items-center gap-space-xs px-3 py-1.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container-high text-on-surface transition-all group border border-outline-variant/40 shadow-sm" type="button"><span class="material-symbols-outlined text-primary text-[20px]">store</span><div class="flex flex-col text-left"><span class="font-label text-xs font-bold text-on-surface leading-tight">Café Andino S.A.S.</span><span class="font-mono text-[11px] text-secondary leading-tight">NIT 901.458.329-1</span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] ml-space-xs">arrow_drop_down</span></button></div><div class="flex items-center gap-space-md"><button aria-label="Cambiar tema" class="p-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center justify-center" type="button"><span class="material-symbols-outlined text-[20px]">light_mode</span></button><button aria-label="Notificaciones fiscales" class="relative p-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center justify-center" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="h-6 w-[1px] bg-outline-variant/40"></div><div class="flex items-center gap-space-sm"><div class="flex flex-col text-right"><span class="font-label text-xs font-bold text-on-surface leading-tight">Carlos Mario Restrepo</span><span class="font-label text-[11px] text-primary font-semibold leading-tight">Administrador / Contador</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary/20 shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8BwwW0D0hbFYfNk9yXjogLH6vBxhtCCOIN9-6TmG3Q0qnNo6pl0lLW1PLxXpkXQ9Lsv6RgJAVlWSPNylyIDkWswcb5En853nNRqkL6ovuxMlFYlDvvlS4xemIT7OVd3rqCLKLHdkj0WVupjZfyJWOmcaHDoVfs73-qtqFIqI2n0IReHRyoeRN-WRtPK2WnubvHK66m_mbg7NVk9awwL-cjo4oMN32TApBTgBVZf-8MzQ-M0yEWhz1"/></div></div></header><main class="relative w-full pt-16 bg-surface px-margin-lg py-margin-md flex-1"><div class="flex flex-col w-full">
+<!-- Top Meta & Filter Command Bar -->
+<section class="mb-gutter-lg flex flex-col gap-space-md rounded-xl bg-surface-container-lowest p-margin shadow-sm border border-outline-variant/30 md:flex-row md:items-center md:justify-between">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-primary font-label text-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+          NIIF para PyMEs Grupo 2
+        </span>
+<span class="font-mono text-xs text-secondary font-medium">Código PUC / Estándar DIAN</span>
+</div>
+<div class="flex flex-wrap items-baseline gap-space-sm">
+<h1 class="font-headline text-2xl font-bold text-primary tracking-tight">Estado de Resultados Integral (PyG)</h1>
+<span class="font-body text-sm text-secondary">| Café Andino S.A.S. (NIT 901.458.329-1)</span>
+</div>
+<p class="font-body text-xs text-on-surface-variant">
+        Expresado en Pesos Colombianos (COP) • Vigencia fiscal 2024 reglamentaria
+      </p>
+</div>
+<!-- Filters and Action Toolbar -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<!-- Period Selector dropdown pill -->
+<div class="flex items-center gap-space-xs rounded-xl bg-surface-container-low px-3 py-1.5 text-on-surface border border-outline-variant/40">
+<span class="material-symbols-outlined text-primary text-[18px]">calendar_today</span>
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-secondary font-semibold uppercase">Período Fiscal</span>
+<span class="font-label text-xs font-bold text-primary">01 Ene 2024 - 31 Oct 2024</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">expand_more</span>
+</div>
+<!-- Comparative mode selector -->
+<div class="flex items-center gap-space-xs rounded-xl bg-surface-container-low px-3 py-1.5 border border-outline-variant/40">
+<span class="material-symbols-outlined text-tertiary text-[18px]">compare_arrows</span>
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-secondary font-semibold uppercase">Comparativo</span>
+<span class="font-label text-xs font-bold text-on-surface">vs. Año 2023</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center gap-space-xs">
+<button class="inline-flex items-center gap-1 rounded-xl bg-surface-container-low px-3 py-2 font-label text-xs font-bold text-primary hover:bg-surface-container border border-outline-variant/40 transition-colors shadow-sm" title="Exportar archivo de hoja de cálculo" type="button">
+<span class="material-symbols-outlined text-[18px]">table_view</span>
+<span>Excel (.xlsx)</span>
+</button>
+<button class="inline-flex items-center gap-1 rounded-xl bg-surface-container-low px-3 py-2 font-label text-xs font-bold text-primary hover:bg-surface-container border border-outline-variant/40 transition-colors shadow-sm" title="Dictamen oficial firmado por revisor fiscal" type="button">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+<span>Dictamen PDF</span>
+</button>
+<button class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 font-label text-xs font-bold text-on-primary shadow-sm hover:bg-primary/90 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">lock_clock</span>
+<span>Cierre Contable</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Summary Quick Pill Notification Banner -->
+<div class="mb-gutter-lg flex items-center justify-between rounded-xl bg-surface-container-low border border-outline-variant/30 px-margin py-space-sm text-on-surface">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">fact_check</span>
+<span class="font-body text-xs">
+<strong>Conciliación DIAN completada:</strong> Documentos soporte electrónicos validados al 100% (Eventos Radian y Facturación Electrónica al corte de Octubre).
+      </span>
+</div>
+<div class="hidden md:flex items-center gap-space-xs font-mono text-xs text-secondary">
+<span>Tasa Renta Jurídicas: 35.0%</span>
+<span>•</span>
+<span>Base Gravable Depurada</span>
+</div>
+</div>
+<!-- 2-Column Main Layout: 65% Waterfall Statement / 35% Analytics & Key Ratios -->
+<div class="grid grid-cols-1 gap-gutter-lg lg:grid-cols-12">
+<!-- LEFT COLUMN (Approx 65% -> 8 of 12 cols): Formal Financial Waterfall Report -->
+<div class="lg:col-span-8 flex flex-col gap-gutter-lg">
+<div class="rounded-xl bg-surface-container-lowest p-margin shadow-sm border border-outline-variant/30">
+<div class="mb-space-lg flex items-center justify-between pb-space-xs border-b border-outline-variant/30">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[22px]">account_balance_wallet</span>
+<h2 class="font-headline text-lg font-bold text-primary">Estado de Resultados por Función</h2>
+</div>
+<div class="flex items-center gap-space-xs text-secondary font-label text-xs">
+<span>Cifras acumuladas a 10 meses</span>
+<span class="h-2 w-2 rounded-full bg-primary"></span>
+</div>
+</div>
+<!-- Cascading Ledger Table with Tabular Mono Digits -->
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left font-body text-sm">
+<thead>
+<tr class="bg-surface-container text-secondary font-label text-xs uppercase tracking-wider border-b border-outline-variant/40">
+<th class="px-space-md py-2.5 font-bold">Concepto Contable (NIIF / PUC)</th>
+<th class="px-space-md py-2.5 text-right font-bold">2024 (COP)</th>
+<th class="px-space-md py-2.5 text-right font-bold">2023 (COP)</th>
+<th class="px-space-md py-2.5 text-right font-bold">Var. %</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<!-- SECTION 1: INGRESOS OPERACIONALES -->
+<tr class="bg-surface-container-low/70 hover:bg-surface-container transition-colors">
+<td class="px-space-md py-space-sm font-bold text-primary flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-primary">add_circle</span>
+<span>(+) Ingresos Operacionales / Ventas Netas</span>
+</td>
+<td class="px-space-md py-space-sm text-right font-mono font-bold text-primary tabular-nums">$ 1.485.200.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-secondary tabular-nums">$ 1.280.000.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-xs font-bold text-primary tabular-nums">+16.0%</td>
+</tr>
+<!-- Sub-items -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-on-surface-variant flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-primary/40"></span>
+<span>Venta de bienes y productos procesados (Café Especial)</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-on-surface tabular-nums">$ 1.340.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">$ 1.150.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">+16.5%</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-on-surface-variant flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-primary/40"></span>
+<span>Prestación de servicios técnicos y catación</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-on-surface tabular-nums">$ 175.200.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">$ 155.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">+13.0%</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-error flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-error"></span>
+<span>Devoluciones, rebajas y descuentos en ventas</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-error font-medium tabular-nums">-$ 30.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">-$ 25.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-error tabular-nums">+20.0%</td>
+</tr>
+<!-- SECTION 2: COSTO DE VENTAS -->
+<tr class="bg-surface-container-low/70 hover:bg-surface-container transition-colors">
+<td class="px-space-md py-space-sm font-bold text-on-surface flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-error">remove_circle</span>
+<span>(−) Costo de Ventas y Producción</span>
+</td>
+<td class="px-space-md py-space-sm text-right font-mono font-bold text-error tabular-nums">-$ 683.192.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-secondary tabular-nums">-$ 619.520.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-xs font-semibold text-secondary tabular-nums">+10.3%</td>
+</tr>
+<!-- Sub-items -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-on-surface-variant flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-outline-variant"></span>
+<span>Materia prima e insumos agrícolas directos</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-on-surface tabular-nums">-$ 460.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">-$ 415.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">+10.8%</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-on-surface-variant flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-outline-variant"></span>
+<span>Mano de obra directa de planta y secado</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-on-surface tabular-nums">-$ 145.192.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">-$ 132.520.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">+9.5%</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-on-surface-variant flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-outline-variant"></span>
+<span>Costos indirectos de fabricación (CIF y empaque)</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-on-surface tabular-nums">-$ 78.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">-$ 72.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">+8.3%</td>
+</tr>
+<!-- WATERFALL TOTAL 1: UTILIDAD BRUTA (Featured Row) -->
+<tr class="bg-primary-fixed/25 text-on-surface border-y-2 border-primary/30">
+<td class="px-space-md py-space-sm font-headline font-bold text-primary flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[20px] text-primary">drag_handle</span>
+<span>(=) UTILIDAD BRUTA</span>
+</div>
+<span class="rounded-full bg-primary/15 px-2 py-0.5 font-label text-[11px] font-bold text-primary">Margen: 54.0%</span>
+</td>
+<td class="px-space-md py-space-sm text-right font-mono text-base font-bold text-primary tabular-nums">$ 802.008.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-secondary tabular-nums">$ 660.480.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-xs font-bold text-primary tabular-nums">+21.4%</td>
+</tr>
+<!-- SECTION 3: GASTOS OPERACIONALES -->
+<tr class="bg-surface-container-low/70 hover:bg-surface-container transition-colors">
+<td class="px-space-md py-space-sm font-bold text-on-surface flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-error">remove_circle</span>
+<span>(−) Gastos Operacionales de Admón. y Ventas</span>
+</td>
+<td class="px-space-md py-space-sm text-right font-mono font-bold text-error tabular-nums">-$ 341.596.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-secondary tabular-nums">-$ 298.000.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-xs font-semibold text-secondary tabular-nums">+14.6%</td>
+</tr>
+<!-- Sub-items -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-on-surface-variant flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-outline-variant"></span>
+<span>Sueldos, honorarios y prestaciones sociales</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-on-surface tabular-nums">-$ 210.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">-$ 185.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">+13.5%</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-on-surface-variant flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-outline-variant"></span>
+<span>Arrendamientos y sedes comerciales</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-on-surface tabular-nums">-$ 54.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">-$ 48.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">+12.5%</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-on-surface-variant flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-outline-variant"></span>
+<span>Servicios públicos, energía y telecomunicaciones</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-on-surface tabular-nums">-$ 18.400.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">-$ 16.500.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">+11.5%</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-on-surface-variant flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-outline-variant"></span>
+<span>Publicidad, ferias cafeteras y mercadeo</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-on-surface tabular-nums">-$ 32.600.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">-$ 26.500.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">+23.0%</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-on-surface-variant flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-outline-variant"></span>
+<span>Depreciaciones y amortizaciones de activos fijos</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-on-surface tabular-nums">-$ 26.596.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">-$ 22.000.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">+20.8%</td>
+</tr>
+<!-- WATERFALL TOTAL 2: UTILIDAD OPERACIONAL / EBIT -->
+<tr class="bg-surface-container">
+<td class="px-space-md py-space-sm font-label text-xs font-bold text-primary flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-primary">equal</span>
+<span>(=) UTILIDAD OPERACIONAL (EBIT)</span>
+</div>
+<span class="rounded-full bg-primary/10 px-2 py-0.5 font-label text-[11px] font-bold text-primary">Margen: 31.0%</span>
+</td>
+<td class="px-space-md py-space-sm text-right font-mono font-bold text-primary tabular-nums">$ 460.412.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-secondary tabular-nums">$ 362.480.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-xs font-bold text-primary tabular-nums">+27.0%</td>
+</tr>
+<!-- SECTION 4: NO OPERACIONALES -->
+<tr class="bg-surface-container-low/70 hover:bg-surface-container transition-colors">
+<td class="px-space-md py-space-sm font-bold text-on-surface flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-secondary">sync_alt</span>
+<span>(+/−) Ingresos y Gastos No Operacionales</span>
+</td>
+<td class="px-space-md py-space-sm text-right font-mono font-bold text-error tabular-nums">-$ 38.450.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-secondary tabular-nums">-$ 32.100.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-xs font-semibold text-secondary tabular-nums">+19.7%</td>
+</tr>
+<!-- Sub-items -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-primary font-semibold flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
+<span>Rendimientos financieros y cuentas remuneradas</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-primary font-bold tabular-nums">+$ 6.200.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">+$ 4.100.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-primary font-semibold tabular-nums">+51.2%</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="pl-margin-lg pr-space-md py-1.5 text-xs text-error flex items-center gap-2">
+<span class="h-1.5 w-1.5 rounded-full bg-error"></span>
+<span>Gastos bancarios, intereses créditos y 4x1.000</span>
+</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-error tabular-nums">-$ 44.650.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-secondary tabular-nums">-$ 36.200.000</td>
+<td class="px-space-md py-1.5 text-right font-mono text-xs text-error tabular-nums">+23.3%</td>
+</tr>
+<!-- WATERFALL TOTAL 3: UTILIDAD ANTES DE IMPUESTOS (EBT) -->
+<tr class="bg-surface-container">
+<td class="px-space-md py-space-sm font-label text-xs font-bold text-primary flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-primary">equal</span>
+<span>(=) UTILIDAD ANTES DE IMPUESTOS (EBT)</span>
+</div>
+<span class="rounded-full bg-surface-container-highest px-2 py-0.5 font-label text-[11px] font-semibold text-secondary">Base Depurada</span>
+</td>
+<td class="px-space-md py-space-sm text-right font-mono font-bold text-primary tabular-nums">$ 421.962.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-secondary tabular-nums">$ 330.380.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-xs font-bold text-primary tabular-nums">+27.7%</td>
+</tr>
+<!-- SECTION 5: IMPUESTOS -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-space-md py-space-sm font-bold text-error flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-error">account_balance</span>
+<span>(−) Provisión Impuesto de Renta (Tarifa Legal 35% DIAN)</span>
+</td>
+<td class="px-space-md py-space-sm text-right font-mono font-bold text-error tabular-nums">-$ 147.686.700</td>
+<td class="px-space-md py-space-sm text-right font-mono text-secondary tabular-nums">-$ 115.633.000</td>
+<td class="px-space-md py-space-sm text-right font-mono text-xs text-error tabular-nums">+27.7%</td>
+</tr>
+<!-- FINAL GRAND TOTAL: UTILIDAD NETA DEL EJERCICIO (Ultra-highlighted Hero Row Terra Forest) -->
+<tr class="bg-primary text-on-primary shadow-md">
+<td class="px-space-md py-space-md font-headline text-base font-bold">
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-on-primary/15 text-on-primary">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</span>
+<div class="flex flex-col">
+<span class="leading-tight">(=) UTILIDAD NETA DEL EJERCICIO</span>
+<span class="font-body text-xs font-normal text-on-primary/80">Ganancia líquida definitiva transferible al patrimonio</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-space-md text-right font-mono text-xl font-bold text-on-primary tabular-nums">
+                  $ 274.275.300
+                  <span class="block font-label text-[11px] font-normal text-on-primary/80">COP Líquidos</span>
+</td>
+<td class="px-space-md py-space-md text-right font-mono text-sm text-on-primary/80 tabular-nums">
+                  $ 214.747.000
+                </td>
+<td class="px-space-md py-space-md text-right font-mono tabular-nums">
+<span class="inline-flex items-center gap-1 rounded-full bg-on-primary/20 px-2.5 py-1 font-label text-xs font-bold text-on-primary">
+                    +27.7%
+                  </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Audit Footnote and Accountant Signoff badge -->
+<div class="mt-margin flex flex-col gap-space-sm sm:flex-row sm:items-center sm:justify-between rounded-xl bg-surface-container-low border border-outline-variant/30 p-space-sm">
+<div class="flex items-center gap-space-xs text-secondary">
+<span class="material-symbols-outlined text-[18px] text-primary">verified_user</span>
+<span class="font-body text-xs">Certificado bajo normas internacionales de aseguramiento de la información (NIAS).</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="font-mono text-xs text-on-surface font-semibold">T.P. 182394-T</span>
+<span class="rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 font-label text-xs font-bold text-primary">Aprobado Revisoría</span>
+</div>
+</div>
+</div>
+<!-- Historical Margin Trend Inline Visualization Card (Terra Earth Tones) -->
+<div class="rounded-xl bg-surface-container-lowest p-margin shadow-sm border border-outline-variant/30">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">trending_up</span>
+<h3 class="font-headline text-base font-bold text-primary">Comportamiento Mensual de Ingresos vs. Utilidad Neta</h3>
+</div>
+<span class="font-label text-xs text-secondary">Ene - Oct 2024</span>
+</div>
+<!-- Inline SVG Trend Line & Bar Comparison Chart in Terra Palette -->
+<div class="relative w-full overflow-hidden rounded-xl bg-surface-container-low border border-outline-variant/30 p-space-sm">
+<svg class="w-full h-40 overflow-visible text-primary" viewbox="0 0 700 160">
+<!-- Grid lines -->
+<line stroke="#c4c8bc" stroke-dasharray="4" stroke-opacity="0.5" x1="0" x2="700" y1="30" y2="30"></line>
+<line stroke="#c4c8bc" stroke-dasharray="4" stroke-opacity="0.5" x1="0" x2="700" y1="75" y2="75"></line>
+<line stroke="#c4c8bc" stroke-dasharray="4" stroke-opacity="0.5" x1="0" x2="700" y1="120" y2="120"></line>
+<!-- Monthly Columns (Ventas netas #78a886 / Utilidad Líquida #4a7c59) -->
+<!-- Ene -->
+<rect fill="#78a886" fill-opacity="0.45" height="85" rx="3" width="28" x="30" y="55"></rect>
+<rect fill="#4a7c59" height="35" rx="2" width="14" x="37" y="105"></rect>
+<!-- Feb -->
+<rect fill="#78a886" fill-opacity="0.45" height="95" rx="3" width="28" x="100" y="45"></rect>
+<rect fill="#4a7c59" height="42" rx="2" width="14" x="107" y="98"></rect>
+<!-- Mar -->
+<rect fill="#78a886" fill-opacity="0.45" height="100" rx="3" width="28" x="170" y="40"></rect>
+<rect fill="#4a7c59" height="48" rx="2" width="14" x="177" y="92"></rect>
+<!-- Abr -->
+<rect fill="#78a886" fill-opacity="0.45" height="90" rx="3" width="28" x="240" y="50"></rect>
+<rect fill="#4a7c59" height="38" rx="2" width="14" x="247" y="102"></rect>
+<!-- May -->
+<rect fill="#78a886" fill-opacity="0.45" height="108" rx="3" width="28" x="310" y="32"></rect>
+<rect fill="#4a7c59" height="55" rx="2" width="14" x="317" y="85"></rect>
+<!-- Jun -->
+<rect fill="#78a886" fill-opacity="0.45" height="102" rx="3" width="28" x="380" y="38"></rect>
+<rect fill="#4a7c59" height="50" rx="2" width="14" x="387" y="90"></rect>
+<!-- Jul -->
+<rect fill="#78a886" fill-opacity="0.45" height="112" rx="3" width="28" x="450" y="28"></rect>
+<rect fill="#4a7c59" height="62" rx="2" width="14" x="457" y="78"></rect>
+<!-- Ago -->
+<rect fill="#78a886" fill-opacity="0.45" height="115" rx="3" width="28" x="520" y="25"></rect>
+<rect fill="#4a7c59" height="65" rx="2" width="14" x="527" y="75"></rect>
+<!-- Sep -->
+<rect fill="#78a886" fill-opacity="0.45" height="118" rx="3" width="28" x="590" y="22"></rect>
+<rect fill="#4a7c59" height="70" rx="2" width="14" x="597" y="70"></rect>
+<!-- Oct -->
+<rect fill="#4a7c59" height="125" rx="3" width="28" x="650" y="15"></rect>
+<rect fill="#8ecf9e" height="75" rx="2" width="14" x="657" y="65"></rect>
+<!-- Margin percentage trend polyline in Terra warm bronze #705c30 -->
+<path d="M 44 95 Q 114 90, 184 88 T 324 80 T 464 70 T 604 65 T 664 58" fill="none" stroke="#705c30" stroke-linecap="round" stroke-width="2.5"></path>
+</svg>
+<div class="mt-space-xs flex items-center justify-between text-secondary font-label text-xs px-2">
+<span>Ene</span>
+<span>Feb</span>
+<span>Mar</span>
+<span>Abr</span>
+<span>May</span>
+<span>Jun</span>
+<span>Jul</span>
+<span>Ago</span>
+<span>Sep</span>
+<span class="font-bold text-primary">Oct (Pico)</span>
+</div>
+</div>
+<div class="mt-space-md flex flex-wrap items-center justify-between gap-space-sm text-secondary font-body text-xs">
+<div class="flex items-center gap-space-md">
+<span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm bg-primary"></span> Ventas Totales</span>
+<span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm bg-inverse-primary border border-primary/30"></span> Utilidad Líquida</span>
+<span class="flex items-center gap-1.5"><span class="h-1 w-4 rounded-full bg-tertiary"></span> Tendencia Margen</span>
+</div>
+<span class="font-label text-xs text-primary font-bold">Tasa de retención comercial promedio: 94.2%</span>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN (Approx 35% -> 4 of 12 cols): Key Performance Financial Cards & KPI Modules -->
+<div class="lg:col-span-4 flex flex-col gap-gutter-lg">
+<!-- KPI 1: Margen Bruto -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm border border-outline-variant/30">
+<div class="flex items-center justify-between">
+<span class="font-label text-[11px] uppercase tracking-wider text-secondary font-bold">Rentabilidad Operativa</span>
+<span class="inline-flex items-center gap-0.5 rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 font-label text-xs font-bold text-primary">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+            +2.4% vs 2023
+          </span>
+</div>
+<div class="mt-space-xs flex items-baseline justify-between">
+<div class="flex flex-col">
+<span class="font-headline text-lg font-bold text-primary">Margen Bruto</span>
+<span class="font-mono text-2xl font-bold text-primary tabular-nums">54.0%</span>
+</div>
+<span class="font-mono text-xs text-secondary">Meta: &gt; 50%</span>
+</div>
+<!-- Visual Progress Bar -->
+<div class="mt-space-sm w-full">
+<div class="h-2 w-full overflow-hidden rounded-full bg-surface-container-high">
+<div class="h-full rounded-full bg-primary" style="width: 54%;"></div>
+</div>
+<div class="mt-1 flex justify-between font-label text-xs text-secondary">
+<span>0%</span>
+<span class="text-primary font-bold">54.0% Actual</span>
+<span>100%</span>
+</div>
+</div>
+<p class="mt-space-sm font-body text-xs text-on-surface-variant">
+          Excelente absorción de costos fijos por optimización de la cadena de suministro de granos pergamino.
+        </p>
+</div>
+<!-- KPI 2: Margen Neto -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm border border-outline-variant/30">
+<div class="flex items-center justify-between">
+<span class="font-label text-[11px] uppercase tracking-wider text-secondary font-bold">Rendimiento Final</span>
+<span class="inline-flex items-center gap-0.5 rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 font-label text-xs font-bold text-primary">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+            +1.8% vs 2023
+          </span>
+</div>
+<div class="mt-space-xs flex items-baseline justify-between">
+<div class="flex flex-col">
+<span class="font-headline text-lg font-bold text-primary">Margen Neto</span>
+<span class="font-mono text-2xl font-bold text-primary tabular-nums">18.47%</span>
+</div>
+<span class="rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 font-label text-xs text-primary font-bold">Saludable</span>
+</div>
+<!-- Mini Gauge Arc Graphic -->
+<div class="mt-space-sm flex items-center gap-space-md rounded-xl bg-surface-container-low border border-outline-variant/30 p-space-sm">
+<svg class="h-12 w-12 shrink-0" viewbox="0 0 36 36">
+<path class="text-surface-container-high" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.8"></path>
+<path class="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="18.5, 100" stroke-linecap="round" stroke-width="3.8"></path>
+<text class="font-mono text-[8px] font-bold fill-primary" text-anchor="middle" x="18" y="20.5">18.5%</text>
+</svg>
+<div class="flex flex-col">
+<span class="font-label text-xs font-bold text-primary">Generación de Caja Neta</span>
+<span class="font-body text-xs text-on-surface-variant">$18.47 por cada $100 COP facturados tras deducción de renta (DIAN).</span>
+</div>
+</div>
+</div>
+<!-- KPI 3: Razón Corriente (Liquidez) -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm border border-outline-variant/30">
+<div class="flex items-center justify-between">
+<span class="font-label text-[11px] uppercase tracking-wider text-secondary font-bold">Solvencia de Corto Plazo</span>
+<span class="material-symbols-outlined text-primary text-[20px]">format_image_left</span>
+</div>
+<div class="mt-space-xs flex items-baseline justify-between">
+<div class="flex flex-col">
+<span class="font-headline text-lg font-bold text-primary">Razón Corriente</span>
+<span class="font-mono text-2xl font-bold text-primary tabular-nums">1.84x</span>
+</div>
+<span class="font-mono text-xs text-secondary">Activo / Pasivo C.</span>
+</div>
+<div class="mt-space-sm">
+<span class="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-1 font-label text-xs font-bold text-primary">
+<span class="material-symbols-outlined text-[14px]">thumb_up</span>
+            Excelente liquidez a corto plazo
+          </span>
+</div>
+<div class="mt-space-sm rounded-xl bg-surface-container-low border border-outline-variant/30 p-space-sm font-body text-xs text-on-surface-variant">
+          La empresa cuenta con $1.84 COP en activos líquidos por cada $1.00 COP de obligaciones exigibles antes de 12 meses.
+        </div>
+</div>
+<!-- KPI 4: Rotación de Cartera -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm border border-outline-variant/30">
+<div class="flex items-center justify-between">
+<span class="font-label text-[11px] uppercase tracking-wider text-secondary font-bold">Gestión de Cobranza</span>
+<span class="rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 font-label text-xs font-bold text-primary">
+            Meta: &lt; 45 días
+          </span>
+</div>
+<div class="mt-space-xs flex items-baseline justify-between">
+<div class="flex flex-col">
+<span class="font-headline text-lg font-bold text-primary">Rotación de Cartera</span>
+<div class="flex items-baseline gap-1">
+<span class="font-mono text-2xl font-bold text-primary tabular-nums">38</span>
+<span class="font-body text-sm text-secondary">días</span>
+</div>
+</div>
+<span class="font-body text-xs text-primary font-bold">-7 días vs política</span>
+</div>
+<!-- Visual Comparison Gauge Bar -->
+<div class="mt-space-sm flex flex-col gap-1">
+<div class="relative h-2.5 w-full rounded-full bg-surface-container-high overflow-hidden">
+<div class="absolute left-0 top-0 h-full bg-primary rounded-full" style="width: 42%;"></div>
+<div class="absolute top-0 bottom-0 w-0.5 bg-error" style="left: 50%;" title="Límite meta 45 días"></div>
+</div>
+<div class="flex justify-between font-label text-xs text-secondary">
+<span>0 días</span>
+<span class="text-primary font-bold">38 días (Cobro rápido)</span>
+<span class="text-error font-medium">Meta 45d</span>
+<span>90d</span>
+</div>
+</div>
+<p class="mt-space-xs font-body text-xs text-on-surface-variant">
+          Ciclo de recaudo eficiente. No se evidencian saldos vencidos de riesgo en facturas electrónicas emitidas.
+        </p>
+</div>
+<!-- KPI 5: EBITDA & Margen EBITDA Card (Terra Forest & Olive Theme) -->
+<div class="rounded-xl bg-gradient-to-br from-primary to-[#386044] p-space-lg text-on-primary shadow-md">
+<div class="flex items-center justify-between">
+<span class="font-label text-[11px] uppercase tracking-wider text-on-primary/80 font-bold">Capacidad Operativa Bruta</span>
+<span class="rounded-full bg-on-primary/15 px-2.5 py-0.5 font-label text-xs text-on-primary font-bold">
+            Flujo Operativo
+          </span>
+</div>
+<div class="mt-space-sm">
+<span class="font-body text-xs text-on-primary/80">EBITDA Acumulado</span>
+<div class="font-mono text-2xl font-bold text-on-primary leading-tight tabular-nums">
+            $ 487.008.000 <span class="font-body text-xs font-normal text-on-primary/80">COP</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between rounded-xl bg-on-primary/10 p-space-sm backdrop-blur-md border border-on-primary/10">
+<div class="flex flex-col">
+<span class="font-label text-xs text-on-primary/80">Margen EBITDA</span>
+<span class="font-mono text-lg font-bold text-on-primary tabular-nums">32.8%</span>
+</div>
+<div class="h-8 w-px bg-on-primary/20"></div>
+<div class="flex flex-col text-right">
+<span class="font-label text-xs text-on-primary/80">+ Depreciaciones</span>
+<span class="font-mono text-xs text-on-primary font-bold tabular-nums">$ 26.596.000</span>
+</div>
+</div>
+</div>
+<!-- Executive Notes Card & Production Facility Context -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm border border-outline-variant/30">
+<div class="flex items-center gap-space-xs mb-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">notes</span>
+<h4 class="font-label text-xs font-bold text-primary uppercase tracking-wider">Notas a los Estados Financieros</h4>
+</div>
+<div class="relative h-28 w-full overflow-hidden rounded-xl mb-space-sm">
+<img class="h-full w-full object-cover" data-alt="A clean, modern specialty coffee processing plant in Colombia with stainless steel machinery, warm ambient lighting, stacked labeled burlap sacks, and high-end industrial interior aesthetic in deep teal and forest green tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8bVeVJ4enUWeVgzbPrx7WSUbmOSQnH9vM5KSf82tMcwsBVFH7bsBJO_YYQ3x138HnCHzb9s8-e--L4e4eWW6Sw4aGcvGttiqWHoCAkDAef4sE4kMcWbKD6iZ4v0n63PfgzctD1Q9Ujew2m7Xs1lWDWnHAMngP6AQAYq0PGFSTcYsC4pPV7DXZ8vEKU9HxpiUVfY6UiYyrKu0IJY20gCYCsLA4s1CYZCsHHyhTYRwlma5Hs9C5985b"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/85 to-transparent flex items-end p-space-xs">
+<span class="font-label text-xs text-on-primary font-semibold">Planta Trilladora &amp; Laboratorio Manizales, Caldas</span>
+</div>
+</div>
+<ul class="flex flex-col gap-2 font-body text-xs text-on-surface-variant">
+<li class="flex items-start gap-1.5">
+<span class="material-symbols-outlined text-primary text-[16px] shrink-0 mt-0.5">check</span>
+<span>Depreciación línea recta calculada a 10 años para maquinaria industrial.</span>
+</li>
+<li class="flex items-start gap-1.5">
+<span class="material-symbols-outlined text-primary text-[16px] shrink-0 mt-0.5">check</span>
+<span>Retención en la fuente practicada y declarada sin contingencias ante la DIAN.</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Interactive Filter Modal / Drilldown Micro-interaction Script -->
+<script>
+    // Lightweight micro-interaction script for accounting row toggles or export feedback
+    document.addEventListener('DOMContentLoaded', () => {
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          // Subtle click scale effect
+          btn.classList.add('opacity-80');
+          setTimeout(() => btn.classList.remove('opacity-80'), 150);
+        });
+      });
+    });
+  </script>
+</div></main></div></body></html>

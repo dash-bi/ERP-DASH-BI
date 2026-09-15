@@ -1,78 +1,77 @@
 /* ============================================================
    base.css — Reset, tokens de tema, tipografía y utilidades
-   Piel "Nu": morado de marca, verde ácido de acento, fondo
-   lavanda y esquinas muy redondeadas.
-   La tipografía se pide a Google Fonts desde index.html; si no
-   hay red, la pila del sistema la sustituye sin romper nada.
+   Piel "Terra" (diseños de Stitch en .design/stitch_erp_financiero_colombiano):
+   verde bosque, crema cálido, ámbar y terracota; esquinas de 12 px
+   y sombras muy suaves. La tipografía se pide a Google Fonts desde
+   index.html; sin red, la pila del sistema la sustituye sin romper nada.
    ============================================================ */
 
 :root {
     color-scheme: light;
 
-    --font-sans: "Plus Jakarta Sans", "Segoe UI Variable Text", "Segoe UI", system-ui,
+    --font-sans: "Nunito Sans", "Segoe UI Variable Text", "Segoe UI", system-ui,
                  -apple-system, "Helvetica Neue", Arial, sans-serif;
-    --font-display: "Outfit", "Segoe UI Variable Display", "Segoe UI", system-ui,
-                    -apple-system, "Helvetica Neue", Arial, sans-serif;
-    --font-mono: "Cascadia Mono", Consolas, "SF Mono", "Roboto Mono", monospace;
+    --font-display: "Literata", Georgia, "Times New Roman", serif;
+    --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, "SF Mono", monospace;
 
-    /* Superficies */
-    --bg: #f5f3fa;
-    --bg-accent: radial-gradient(1100px 560px at 12% -12%, #e8dcff 0%, transparent 62%),
-                 radial-gradient(820px 460px at 100% 0%, #e6f7c9 0%, transparent 58%);
+    /* Superficies: crema cálido en capas, nunca blanco clínico de fondo */
+    --bg: #faf6f0;
+    --bg-accent: none;
     --surface: #ffffff;
-    --surface-2: #f5f3fa;
-    --surface-glass: rgba(255, 255, 255, 0.80);
-    --border: #ede8f7;
-    --border-strong: #ded5f0;
+    --surface-2: #f5f1ea;
+    --surface-glass: rgba(255, 255, 255, 0.86);
+    --border: #e4e0d8;
+    --border-strong: #d4ccbf;
 
-    /* Texto */
-    --text: #16062b;
-    --text-muted: #6e6486;
-    --text-soft: #746890;
+    /* Texto: grises con matiz cálido */
+    --text: #2e3230;
+    --text-muted: #5a615a;
+    --text-soft: #6b6358;
     --text-invert: #ffffff;
 
     /* Marca */
-    --primary: #7b2ff7;
-    --primary-hover: #4b0fa8;
-    --primary-soft: #f0e7ff;
-    --accent: #c9f73f;          /* verde ácido: acciones vivas */
-    --accent-hover: #b8e831;
-    --accent-ink: #12061f;      /* texto legible sobre el acento */
-    --night: #170729;           /* superficie oscura de marca */
-    --night-2: #2c1052;
+    --primary: #4a7c59;
+    --primary-hover: #3d6649;
+    --primary-soft: #e1ede4;
+    --on-primary: #ffffff;       /* texto sobre el color primario */
+    --accent: #e1ede4;           /* realce suave: acciones cortas y selección */
+    --accent-hover: #c8e8d0;
+    --accent-ink: #1b4d2e;       /* texto legible sobre el realce */
+    --night: #3d6649;            /* tarjeta destacada de marca */
+    --night-2: #4a7c59;
 
     /* Estados */
-    --success: #097a56;
-    --success-soft: #e4fbf2;
-    --danger: #c22b48;
-    --danger-solid: #ff4d6d;
-    --danger-soft: #ffe9ee;
-    --warning: #8a5a0e;
-    --warning-soft: #fff3dc;
-    --info: #1d6fa8;
-    --info-soft: #eaf6ff;
+    --success: #2a6038;
+    --success-soft: #e1ede4;
+    --danger: #a8402f;
+    --danger-solid: #c05646;
+    --danger-soft: #fbeae7;
+    --warning: #7a5410;
+    --warning-soft: #fef3c7;
+    --info: #3f6674;
+    --info-soft: #e6eff1;
 
-    /* Series de gráficos: legibles sobre fondo claro y oscuro.
-       El verde ácido se reserva para la interfaz, no para las líneas. */
-    --c1: #7b2ff7;
-    --c2: #12c48b;
-    --c3: #ffb020;
-    --c4: #ff4d6d;
-    --c5: #2c8fd8;
-    --c6: #8ec400;
-    --c7: #8e82ac;
-    --c8: #f0954a;
+    /* Series de gráficos: tierra y bosque, legibles sobre crema y blanco.
+       c1 = ingresos y marca, c2 = favorable, c6 = costos y desfavorable. */
+    --c1: #4a7c59;
+    --c2: #5e9470;
+    --c3: #c49a3c;
+    --c4: #8a6d3b;
+    --c5: #5f8290;
+    --c6: #c05646;
+    --c7: #9aa095;
+    --c8: #d97706;
 
     /* Formas */
-    --r-sm: 10px;
-    --r-md: 14px;
-    --r-lg: 22px;
-    --r-xl: 30px;
+    --r-sm: 8px;
+    --r-md: 12px;
+    --r-lg: 12px;
+    --r-xl: 16px;
     --r-pill: 999px;
-    --shadow-sm: 0 1px 2px rgba(22, 6, 43, 0.07);
-    --shadow-md: 0 8px 24px rgba(22, 6, 43, 0.09);
-    --shadow-lg: 0 24px 60px rgba(22, 6, 43, 0.16);
-    --shadow-primary: 0 6px 18px rgba(123, 47, 247, 0.32);
+    --shadow-sm: 0 1px 2px rgba(46, 50, 48, 0.05);
+    --shadow-md: 0 4px 20px rgba(46, 50, 48, 0.06);
+    --shadow-lg: 0 18px 48px rgba(46, 50, 48, 0.12);
+    --shadow-primary: 0 4px 14px rgba(74, 124, 89, 0.24);
 
     /* Espaciado consistente */
     --sp-1: 4px;
@@ -85,57 +84,57 @@
 
     --sidebar-w: 262px;
     --sidebar-w-collapsed: 76px;
-    --topbar-h: 76px;
+    --topbar-h: 72px;
 }
 
 [data-theme="dark"] {
     color-scheme: dark;
 
-    --bg: #0d0518;
-    --bg-accent: radial-gradient(1100px 560px at 12% -12%, #2a0f55 0%, transparent 62%),
-                 radial-gradient(820px 460px at 100% 0%, #17330c 0%, transparent 58%);
-    --surface: #190a2e;
-    --surface-2: #22103c;
-    --surface-glass: rgba(25, 10, 46, 0.80);
-    --border: #2e1a4d;
-    --border-strong: #43276b;
+    --bg: #151816;
+    --bg-accent: none;
+    --surface: #1e2220;
+    --surface-2: #252a27;
+    --surface-glass: rgba(30, 34, 32, 0.86);
+    --border: #313833;
+    --border-strong: #414a44;
 
-    --text: #f2ecff;
-    --text-muted: #b5a7d4;
-    --text-soft: #8f80b4;
+    --text: #eceae4;
+    --text-muted: #bcc2b8;
+    --text-soft: #a3a99e;
 
-    --primary: #a877ff;
-    --primary-hover: #c0a0ff;
-    --primary-soft: #2a1250;
-    --accent: #c9f73f;
-    --accent-hover: #d8ff5c;
-    --accent-ink: #12061f;
-    --night: #0d0518;
-    --night-2: #22103c;
+    --primary: #8ecf9e;
+    --primary-hover: #a8dcb4;
+    --primary-soft: #243529;
+    --on-primary: #0f2417;
+    --accent: #2a4031;
+    --accent-hover: #335040;
+    --accent-ink: #c8e8d0;
+    --night: #1b4d2e;
+    --night-2: #2a6038;
 
-    --success: #3ee0a4;
-    --success-soft: #0d3328;
-    --danger: #ff8098;
-    --danger-solid: #ff4d6d;
-    --danger-soft: #3a141f;
-    --warning: #ffc75f;
-    --warning-soft: #372709;
-    --info: #6cc0f0;
-    --info-soft: #0e2c40;
+    --success: #8ecf9e;
+    --success-soft: #1f3326;
+    --danger: #f0a393;
+    --danger-solid: #c05646;
+    --danger-soft: #3a231f;
+    --warning: #e8c67e;
+    --warning-soft: #3a2f1a;
+    --info: #9cc3cf;
+    --info-soft: #1d2d31;
 
-    --c1: #a877ff;
-    --c2: #3ee0a4;
-    --c3: #ffc75f;
-    --c4: #ff8098;
-    --c5: #6cc0f0;
-    --c6: #c9f73f;
-    --c7: #9c8ec4;
-    --c8: #ffab6b;
+    --c1: #8ecf9e;
+    --c2: #6fb383;
+    --c3: #dcc48e;
+    --c4: #c4a66a;
+    --c5: #8fb5c2;
+    --c6: #e08a7a;
+    --c7: #9aa095;
+    --c8: #f0a55a;
 
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
-    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
-    --shadow-primary: 0 6px 18px rgba(168, 119, 255, 0.32);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 6px 22px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 20px 54px rgba(0, 0, 0, 0.55);
+    --shadow-primary: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 /* ---------- Reset ---------- */
@@ -169,7 +168,7 @@ h1, h2, h3, h4, h5, h6, p, figure {
 
 h1, h2, h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.022em;
+    letter-spacing: -0.01em;
 }
 
 h1 { font-size: 1.72rem; line-height: 1.15; font-weight: 700; }

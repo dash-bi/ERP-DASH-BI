@@ -6,7 +6,7 @@ window.ERP = window.ERP || {};
 
 /* Versión publicada. Al cambiarla, actualizar también el ?v= de index.html
    para que el navegador no reutilice los archivos anteriores. */
-ERP.VERSION = '1.7.1';
+ERP.VERSION = '1.8.0';
 
 /* ============================================================
    Configuración del sistema (solo administrador)
@@ -676,19 +676,19 @@ ERP.app = (() => {
     const TEMA_KEY = 'erp_finanzas_tema';
 
     const MODULOS = {
-        dashboard: { etiqueta: 'Tablero ejecutivo', icono: '◈', grupo: 'Operación', render: (c) => ERP.dashboard.vista(c) },
-        ventas: { etiqueta: 'Ventas', icono: '▤', grupo: 'Operación', render: (c) => ERP.ventas.vista(c) },
-        cartera: { etiqueta: 'Cartera y abonos', icono: '◷', grupo: 'Operación', render: (c) => ERP.cartera.vista(c) },
-        compras: { etiqueta: 'Compras', icono: '↓', grupo: 'Operación', render: (c) => ERP.compras.vista(c) },
-        gastos: { etiqueta: 'Gastos', icono: '◇', grupo: 'Operación', render: (c) => ERP.gastos.vista(c) },
-        inventario: { etiqueta: 'Inventario', icono: '▦', grupo: 'Operación', render: (c) => ERP.inventario.vista(c) },
-        clientes: { etiqueta: 'Clientes', icono: '◉', grupo: 'Terceros', render: (c) => ERP.contactos.vistaClientes(c) },
-        proveedores: { etiqueta: 'Proveedores', icono: '◎', grupo: 'Terceros', render: (c) => ERP.contactos.vistaProveedores(c) },
-        financieros: { etiqueta: 'Estados financieros', icono: '▧', grupo: 'Análisis', render: (c) => ERP.estadosFinancieros.vista(c) },
-        equilibrio: { etiqueta: 'Punto de equilibrio', icono: '⟁', grupo: 'Análisis', render: (c) => ERP.equilibrio.vista(c) },
-        prestamos: { etiqueta: 'Simulador de préstamos', icono: '≡', grupo: 'Análisis', render: (c) => ERP.prestamos.vista(c) },
-        nomina: { etiqueta: 'Nómina', icono: '◫', grupo: 'Administración', render: (c) => ERP.nomina.vista(c) },
-        configuracion: { etiqueta: 'Configuración', icono: '⚙', grupo: 'Administración', render: (c) => ERP.configuracion.vista(c) }
+        dashboard: { etiqueta: 'Tablero ejecutivo', icono: 'space_dashboard', grupo: 'Operación', render: (c) => ERP.dashboard.vista(c) },
+        ventas: { etiqueta: 'Ventas', icono: 'receipt_long', grupo: 'Operación', render: (c) => ERP.ventas.vista(c) },
+        cartera: { etiqueta: 'Cartera y abonos', icono: 'account_balance_wallet', grupo: 'Operación', render: (c) => ERP.cartera.vista(c) },
+        compras: { etiqueta: 'Compras', icono: 'shopping_cart', grupo: 'Operación', render: (c) => ERP.compras.vista(c) },
+        gastos: { etiqueta: 'Gastos', icono: 'payments', grupo: 'Operación', render: (c) => ERP.gastos.vista(c) },
+        inventario: { etiqueta: 'Inventario', icono: 'inventory_2', grupo: 'Operación', render: (c) => ERP.inventario.vista(c) },
+        clientes: { etiqueta: 'Clientes', icono: 'groups', grupo: 'Terceros', render: (c) => ERP.contactos.vistaClientes(c) },
+        proveedores: { etiqueta: 'Proveedores', icono: 'local_shipping', grupo: 'Terceros', render: (c) => ERP.contactos.vistaProveedores(c) },
+        financieros: { etiqueta: 'Estados financieros', icono: 'monitoring', grupo: 'Análisis', render: (c) => ERP.estadosFinancieros.vista(c) },
+        equilibrio: { etiqueta: 'Punto de equilibrio', icono: 'balance', grupo: 'Análisis', render: (c) => ERP.equilibrio.vista(c) },
+        prestamos: { etiqueta: 'Simulador de préstamos', icono: 'calculate', grupo: 'Análisis', render: (c) => ERP.prestamos.vista(c) },
+        nomina: { etiqueta: 'Nómina', icono: 'badge', grupo: 'Administración', render: (c) => ERP.nomina.vista(c) },
+        configuracion: { etiqueta: 'Configuración', icono: 'settings', grupo: 'Administración', render: (c) => ERP.configuracion.vista(c) }
     };
 
     /** Orden en que se muestran los grupos del menú lateral. */
@@ -811,7 +811,7 @@ ERP.app = (() => {
                     },
                     on: { click: () => irA(clave) }
                 }, [
-                    el('span', { class: 'nav-icon', text: modulo.icono, attrs: { 'aria-hidden': 'true' } }),
+                    el('span', { class: 'nav-icon icono', text: modulo.icono, attrs: { 'aria-hidden': 'true' } }),
                     el('span', { class: 'nav-label', text: modulo.etiqueta }),
                     insignia ? el('span', { class: 'nav-badge', text: String(insignia) }) : null
                 ]));
@@ -836,7 +836,7 @@ ERP.app = (() => {
         const modulo = MODULOS[estado.vista];
 
         const btnMenu = el('button', {
-            class: 'icon-btn', text: '☰',
+            class: 'icon-btn icono', text: 'menu',
             attrs: { type: 'button', 'aria-label': 'Mostrar u ocultar el menú lateral' },
             on: {
                 click: () => {
@@ -852,8 +852,8 @@ ERP.app = (() => {
         });
 
         const btnTema = el('button', {
-            class: 'icon-btn',
-            text: temaActual() === 'dark' ? '☀' : '☾',
+            class: 'icon-btn icono',
+            text: temaActual() === 'dark' ? 'light_mode' : 'dark_mode',
             attrs: {
                 type: 'button',
                 'aria-label': temaActual() === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'
@@ -868,7 +868,7 @@ ERP.app = (() => {
         });
 
         const btnSalir = el('button', {
-            class: 'icon-btn', text: '⏻',
+            class: 'icon-btn icono', text: 'logout',
             attrs: { type: 'button', 'aria-label': 'Cerrar sesión' },
             on: {
                 click: async () => {

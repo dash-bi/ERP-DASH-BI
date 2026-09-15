@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 1.7.1 | 2026-09-14 | *(esta versión)* | **Migración a Supabase, etapa 1:** esquema de 14 tablas con RLS por empresa y por módulo creado en el proyecto «ERP Financiero» (supabase/001_esquema_inicial.sql y 002_funciones_permisos_privadas.sql), probado con usuarios simulados. La app todavía usa localStorage. |
+| 1.8.0 | 2026-09-15 | *(esta versión)* | **Piel visual Terra:** rediseño basado en los diseños de Stitch (.design/stitch_erp_financiero_colombiano): verde bosque #4a7c59 sobre crema #faf6f0 con ámbar y terracota, Literata para títulos, Nunito Sans para textos y JetBrains Mono para cifras, menú lateral claro con íconos Material Symbols, tarjetas con borde fino, esquinas de 12 px y sombras suaves, ventas en verde y gastos en terracota en los gráficos, tema oscuro cálido y objetivos táctiles de 44 px. Sin cambios de funcionalidad. |
+| 1.7.1 | 2026-09-14 | `f1c6bf3` | **Migración a Supabase, etapa 1:** esquema de 14 tablas con RLS por empresa y por módulo creado en el proyecto «ERP Financiero» (supabase/001_esquema_inicial.sql y 002_funciones_permisos_privadas.sql), probado con usuarios simulados. La app todavía usa localStorage. |
 | 1.7.0 | 2026-09-14 | `ef83a47` | **Tablero ejecutivo rediseñado:** jerarquía real de indicadores (4 principales con variación contra el periodo anterior y minigráfica de tendencia, 6 secundarios compactos), rejilla de 12 columnas con Ventas contra gastos, Cartera por antigüedad, Productos más vendidos y Distribución de gastos, barra de filtros fija al desplazarse y estado vacío explicado con acciones. Nuevo cálculo `ERP.finanzas.carteraPorAntiguedad` y nueva minigráfica `ERP.charts.chispa`. |
 | 1.6.2 | 2026-09-14 | `c6b0fb8` | **Ventas sin «Cargar factura PDF»:** se retira ese botón de la pestaña de Ventas. Compras y Gastos lo conservan, y una factura de venta leída desde allí sigue abriendo el formulario de ventas prellenado. |
 | 1.6.1 | 2026-09-14 | `222fce4` | **Repositorio nuevo:** la app pasa a `github.com/dash-bi/ERP-DASH-BI` (remoto `origin`) con toda su historia; el anterior queda como remoto `finanzas`, sin uso. |
@@ -202,7 +203,7 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 Reglas que el usuario fijó al construir el sistema. Venían de `Agents.md` y siguen vigentes en el código.
 
 - **Prohibido** `var`, `innerHTML`, `alert()`, `confirm()` y `prompt()`. Usar `const`/`let`, `document.createElement` (vía `U.el`), `addEventListener` y `preventDefault()` en los `submit`. Todo feedback va dentro del DOM: toasts, banners, modales y estados vacío/cargando/error.
-- **Sin frameworks ni paquetes.** Las únicas externas autorizadas eran Chart.js, jsPDF/AutoTable y Google Fonts. Hoy solo se usa Google Fonts (Outfit y Plus Jakarta Sans); gráficos y PDF son nativos. La especificación de la app aún pide Chart.js, jsPDF e Inter/Roboto: no migrar sin aprobación del usuario.
+- **Sin frameworks ni paquetes.** Las únicas externas autorizadas eran Chart.js, jsPDF/AutoTable y Google Fonts. Hoy solo se usa Google Fonts: Literata, Nunito Sans, JetBrains Mono y los íconos Material Symbols Outlined (pedidos con `icon_names`, solo los que usa el menú y la barra superior); gráficos y PDF son nativos. La especificación de la app aún pide Chart.js, jsPDF e Inter/Roboto: no migrar sin aprobación del usuario.
 - **Capa de datos única.** Los módulos nunca tocan `localStorage` directamente.
 - **Estructura.** `index.html` + `assets/CSS|JS|IMG`, sin carpetas nuevas sin justificación.
 - **Consistencia.** KPIs, gráficos y tablas usan el mismo conjunto de datos filtrado. Nunca inventar datos ni métricas.

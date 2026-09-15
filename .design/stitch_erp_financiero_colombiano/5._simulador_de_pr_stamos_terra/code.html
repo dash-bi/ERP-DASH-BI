@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,300..800;1,6..12,300..800&amp;family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;font-family:'Nunito Sans',sans-serif;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.tabular-nums{font-variant-numeric:tabular-nums;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "tertiary": "#705c30",
+          "on-primary-container": "#d8f0de",
+          "error": "#b83230",
+          "surface-container": "#f0ece4",
+          "on-primary-fixed": "#002110",
+          "primary-fixed": "#c8e8d0",
+          "on-secondary-container": "#5e5548",
+          "on-tertiary-fixed-variant": "#554020",
+          "inverse-on-surface": "#f5f0e8",
+          "primary": "#4a7c59",
+          "inverse-primary": "#8ecf9e",
+          "on-surface": "#2e3230",
+          "on-secondary-fixed-variant": "#4a4538",
+          "on-error-container": "#690005",
+          "on-background": "#2e3230",
+          "background": "#faf6f0",
+          "surface-container-lowest": "#ffffff",
+          "surface-container-highest": "#e4e0d8",
+          "on-primary-fixed-variant": "#2a6038",
+          "on-surface-variant": "#4a4e4a",
+          "on-secondary": "#ffffff",
+          "on-tertiary-container": "#554020",
+          "outline-variant": "#c4c8bc",
+          "secondary": "#6b6358",
+          "on-tertiary": "#ffffff",
+          "tertiary-container": "#c4a66a",
+          "on-primary": "#ffffff",
+          "secondary-fixed-dim": "#d4ccbf",
+          "on-error": "#ffffff",
+          "surface": "#faf6f0",
+          "surface-dim": "#dbd7cf",
+          "surface-variant": "#e4e0d8",
+          "on-secondary-fixed": "#1e1a13",
+          "secondary-container": "#f0e8db",
+          "tertiary-fixed-dim": "#dcc48e",
+          "surface-container-high": "#eae6de",
+          "surface-tint": "#4a7c59",
+          "on-tertiary-fixed": "#221a05",
+          "outline": "#74796e",
+          "inverse-surface": "#2e3230",
+          "tertiary-fixed": "#f8e0a8",
+          "primary-fixed-dim": "#8ecf9e",
+          "surface-container-low": "#f5f1ea",
+          "surface-bright": "#faf6f0",
+          "primary-container": "#78a886",
+          "secondary-fixed": "#f0e8db",
+          "error-container": "#ffdad8",
+          "terracota": "#b84a39",
+          "terracota-bg": "#f9eae7"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.75rem",
+          "lg": "0.75rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "margin": "1rem",
+          "gutter": "1rem",
+          "space-xs": "0.25rem",
+          "space-lg": "1.25rem",
+          "space-sm": "0.5rem",
+          "margin-md": "1.5rem",
+          "space-xl": "2rem",
+          "gutter-lg": "1.5rem",
+          "space-md": "0.75rem",
+          "margin-lg": "2rem"
+        },
+        "fontFamily": {
+          "headline": ["Literata", "serif"],
+          "display": ["Literata", "serif"],
+          "body": ["Nunito Sans", "sans-serif"],
+          "label": ["Nunito Sans", "sans-serif"]
+        }
+      },
+    },
+  }
+</script></head><body class="bg-background font-body text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low/95 backdrop-blur-xl border-r border-outline-variant/30 shadow-[0_1px_8px_rgba(46,50,48,0.04)] z-50 flex flex-col justify-between transition-all duration-300" id="app-sidebar"><div class="flex flex-col h-full overflow-hidden"><div class="h-16 px-space-md flex items-center justify-between shrink-0 bg-surface-container-low border-b border-outline-variant/20"><div class="flex items-center gap-space-sm overflow-hidden"><img alt="ContaPyme Pro Logo" class="h-8 w-auto object-contain shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1Xm_VqYFajQ8Kcew_ClHq-E9OG89zkG3XTrwc8oxFhwDiOBmqiDcgzukDzlcjHMUr7YYEL2U7AVWNCyIMM21LkH1mmaR72G5B6Lbu6ZoWDtdKGBMX9klYwgEVwFN5OdXI_HOYYrEWzZ-rMx2nCmD2scPkuj8wO5BFMXzzHUYa42H9XNvTDVbp8ffQSF1l_DMhhMmYIJ4pU_SoUDX8Er3k6_fy0er71xdS3tbTwnrEelDgCbRF2iOsM8qok"/><div class="flex flex-col truncate"><span class="font-headline text-lg font-bold tracking-tight text-primary leading-none">ContaPyme</span><span class="text-[11px] uppercase tracking-wider text-tertiary font-semibold">Pro DIAN Cloud</span></div></div><button class="p-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" id="sidebar-collapse-btn" type="button"><span class="material-symbols-outlined text-[20px]">menu_open</span></button></div><nav class="flex-1 overflow-y-auto px-space-sm py-space-sm space-y-space-md"><div class="space-y-space-xs"><p class="px-space-sm text-[11px] font-bold uppercase tracking-wider text-secondary">General</p><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">dashboard</span><span class="text-sm font-medium truncate">Dashboard</span></a></div><div class="space-y-space-xs"><p class="px-space-sm text-[11px] font-bold uppercase tracking-wider text-secondary">Operación</p><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="clientes-y-proveedores" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">groups</span><span class="text-sm font-medium truncate">Clientes y Proveedores</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="inventario" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">inventory_2</span><span class="text-sm font-medium truncate">Inventario</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="compras-y-gastos" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">shopping_cart</span><span class="text-sm font-medium truncate">Compras y Gastos</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="ventas-y-facturacion" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">point_of_sale</span><span class="text-sm font-medium truncate">Ventas y Facturación</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="abonos" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">payments</span><span class="text-sm font-medium truncate">Abonos</span></a></div><div class="space-y-space-xs"><p class="px-space-sm text-[11px] font-bold uppercase tracking-wider text-secondary">Finanzas</p><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="estado-de-resultados" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">query_stats</span><span class="text-sm font-medium truncate">Estado de Resultados</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="balance-general" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">account_balance</span><span class="text-sm font-medium truncate">Balance General</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="flujo-de-caja" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">water_drop</span><span class="text-sm font-medium truncate">Flujo de Caja</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="presupuesto-vs-real" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">compare_arrows</span><span class="text-sm font-medium truncate">Presupuesto vs. Real</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="indicadores" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">speed</span><span class="text-sm font-medium truncate">Indicadores</span></a></div><div class="space-y-space-xs"><p class="px-space-sm text-[11px] font-bold uppercase tracking-wider text-secondary">Herramientas</p><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="punto-de-equilibrio" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">balance</span><span class="text-sm font-medium truncate">Punto de Equilibrio</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl bg-primary-fixed/60 text-on-primary-fixed font-bold shadow-sm transition-all group" data-path="simulador-de-prestamos" href="#"><span class="material-symbols-outlined text-[20px] shrink-0 text-primary">calculate</span><span class="text-sm font-semibold truncate">Simulador de Préstamos</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="liquidacion-de-nomina" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">badge</span><span class="text-sm font-medium truncate">Liquidación de Nómina</span></a></div></nav><div class="p-space-sm shrink-0 bg-surface-container-low border-t border-outline-variant/20"><div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 shadow-xs"><div class="flex items-center gap-space-xs text-primary"><span class="material-symbols-outlined text-[18px]">verified</span><span class="text-xs font-semibold">DIAN Conectado</span></div><span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span></div></div></div></aside><div class="pl-64 flex flex-col min-h-screen bg-background"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/90 backdrop-blur-xl border-b border-outline-variant/25 shadow-xs z-40 flex items-center justify-between px-margin-lg"><div class="flex items-center gap-space-md"><button class="flex items-center gap-space-xs px-3 py-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface border border-outline-variant/30 transition-all group shadow-xs" type="button"><span class="material-symbols-outlined text-primary text-[20px]">store</span><div class="flex flex-col text-left"><span class="text-xs font-bold text-on-surface leading-tight">Café Andino S.A.S.</span><span class="text-[11px] text-secondary font-medium tabular-nums leading-tight">NIT 901.458.329-1</span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] ml-space-xs">arrow_drop_down</span></button></div><div class="flex items-center gap-space-md"><button aria-label="Cambiar tema" class="p-2 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center justify-center" type="button"><span class="material-symbols-outlined text-[20px]">light_mode</span></button><button aria-label="Notificaciones fiscales" class="relative p-2 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center justify-center" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-terracota"></span></button><div class="h-6 w-[1px] bg-outline-variant/40"></div><div class="flex items-center gap-space-sm"><div class="flex flex-col text-right"><span class="text-xs font-bold text-on-surface leading-tight">Carlos Mario Restrepo</span><span class="text-[11px] text-primary font-semibold leading-tight">Administrador / Contador</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8BwwW0D0hbFYfNk9yXjogLH6vBxhtCCOIN9-6TmG3Q0qnNo6pl0lLW1PLxXpkXQ9Lsv6RgJAVlWSPNylyIDkWswcb5En853nNRqkL6ovuxMlFYlDvvlS4xemIT7OVd3rqCLKLHdkj0WVupjZfyJWOmcaHDoVfs73-qtqFIqI2n0IReHRyoeRN-WRtPK2WnubvHK66m_mbg7NVk9awwL-cjo4oMN32TApBTgBVZf-8MzQ-M0yEWhz1"/></div></div></header><main class="relative w-full pt-16 bg-background px-margin-lg py-margin-md flex-1"><div class="flex flex-col w-full space-y-space-lg">
+<!-- Encabezado de Contexto & Metadatos de la Pyme -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex flex-col space-y-1">
+<div class="flex items-center gap-space-xs text-on-surface-variant text-xs font-semibold">
+<span class="uppercase tracking-wider text-secondary">Herramientas Financieras</span>
+<span class="text-outline-variant">/</span>
+<span class="text-on-surface-variant">Simulador de Crédito Empresarial</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<h1 class="font-headline text-2xl font-bold text-on-surface tracking-tight">Evaluación de Financiamiento y Amortización</h1>
+<span class="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">bolt</span> DIAN Sync V2.4
+        </span>
+</div>
+<p class="text-sm text-secondary">
+        Proyecte el impacto en liquidez mensual para Café Andino S.A.S. (NIT 901.458.329-1) según tasas del mercado bancario colombiano.
+      </p>
+</div>
+<!-- Indicador de Solvencia General del Flujo de Caja -->
+<div class="flex items-center gap-space-md p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-xs">
+<div class="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">verified_user</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[11px] font-bold uppercase tracking-wider text-secondary">Cupo Sugerido de Endeudamiento</span>
+<span class="text-base text-primary font-bold tabular-nums">$ 180.000.000 COP</span>
+<span class="text-xs text-secondary font-medium">Capacidad de apalancamiento: 2.1x EBITDA</span>
+</div>
+</div>
+</div>
+<!-- Contenedor Principal: Panel Izquierdo (Parámetros) + Panel Derecho (KPIs y Métricas) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-lg">
+<!-- COLUMNA IZQUIERDA: Formulario de Configuración Glassmorphic -->
+<div class="lg:col-span-5 flex flex-col space-y-space-md">
+<div class="p-space-lg rounded-xl bg-surface-container-low/90 border border-outline-variant/30 shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[22px]">tune</span>
+<h2 class="font-headline text-lg font-bold text-on-surface">Parámetros del Préstamo</h2>
+</div>
+<span class="px-2.5 py-1 rounded-lg bg-primary text-on-primary text-xs font-bold tracking-wide">
+            Vigencia 2024
+          </span>
+</div>
+<!-- Monto del Préstamo -->
+<div class="space-y-space-xs">
+<div class="flex justify-between items-center">
+<label class="text-xs font-bold text-on-surface" for="monto-input">Monto Solicitado (COP)</label>
+<span class="text-xs text-secondary">Mín: $5M • Máx: $300M</span>
+</div>
+<div class="relative flex items-center">
+<span class="absolute left-3 text-secondary font-semibold text-sm">$</span>
+<input class="w-full h-11 pl-8 pr-16 bg-surface-container-lowest rounded-xl border border-outline-variant/40 text-sm font-bold text-on-surface tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors" id="monto-input" type="text" value="85.000.000"/>
+<span class="absolute right-3 text-xs text-secondary font-bold">COP</span>
+</div>
+<input class="w-full accent-primary cursor-pointer mt-2" id="monto-slider" max="300000000" min="5000000" step="1000000" type="range" value="85000000"/>
+</div>
+<!-- Tasas de Interés y Entidad -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<div class="space-y-space-xs">
+<label class="text-xs font-bold text-on-surface">Tasa Efectiva Anual (E.A.)</label>
+<div class="relative flex items-center">
+<input class="w-full h-10 px-3 pr-8 bg-surface-container-lowest rounded-xl border border-outline-variant/40 text-sm font-semibold text-on-surface tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" id="tasa-ea-input" step="0.1" type="number" value="18.5"/>
+<span class="absolute right-3 text-xs text-secondary font-bold">%</span>
+</div>
+</div>
+<div class="space-y-space-xs">
+<label class="text-xs font-bold text-on-surface">Mes Vencido (M.V.)</label>
+<div class="h-10 px-3 flex items-center justify-between rounded-xl bg-surface-container border border-outline-variant/30">
+<span class="text-sm font-bold text-primary tabular-nums" id="tasa-mv-display">1.42%</span>
+<span class="text-xs text-secondary font-bold">M.V.</span>
+</div>
+</div>
+</div>
+<!-- Línea de Financiamiento & Entidad -->
+<div class="space-y-space-xs">
+<label class="text-xs font-bold text-on-surface">Entidad y Línea Preferencial</label>
+<div class="relative">
+<select class="w-full h-10 px-3 bg-surface-container-lowest rounded-xl border border-outline-variant/40 text-sm text-on-surface font-medium appearance-none pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40">
+<option selected="" value="bancolombia">Bancolombia • Línea Capital de Trabajo PyME (18.5% E.A.)</option>
+<option value="davivienda">Davivienda • Crédito Comercial Multipropósito (19.2% E.A.)</option>
+<option value="findeter">Findeter - Redescuento Infraestructura Sostenible (16.4% E.A.)</option>
+<option value="bogota">Banco de Bogotá • Finagro Especial Reactivación (17.8% E.A.)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 pointer-events-none text-secondary text-[20px]">expand_more</span>
+</div>
+</div>
+<!-- Plazo del Crédito -->
+<div class="space-y-space-xs">
+<label class="text-xs font-bold text-on-surface">Plazo de Financiación (Meses)</label>
+<div class="grid grid-cols-5 gap-space-xs" id="term-selector">
+<button class="py-2 text-center rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-on-surface hover:bg-surface-container text-xs font-semibold transition-all" data-term="12" type="button">12 m</button>
+<button class="py-2 text-center rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-on-surface hover:bg-surface-container text-xs font-semibold transition-all" data-term="24" type="button">24 m</button>
+<button class="py-2 text-center rounded-xl bg-primary text-on-primary text-xs font-bold transition-all shadow-xs border border-primary" data-term="36" type="button">36 m</button>
+<button class="py-2 text-center rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-on-surface hover:bg-surface-container text-xs font-semibold transition-all" data-term="48" type="button">48 m</button>
+<button class="py-2 text-center rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-on-surface hover:bg-surface-container text-xs font-semibold transition-all" data-term="60" type="button">60 m</button>
+</div>
+</div>
+<!-- Selector de Sistema de Amortización -->
+<div class="space-y-space-xs">
+<label class="text-xs font-bold text-on-surface">Sistema de Amortización</label>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-xs">
+<label class="flex flex-col p-3 rounded-xl bg-surface-container-lowest border border-primary/40 cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold text-primary">Método Francés</span>
+<input checked="" class="accent-primary w-4 h-4 cursor-pointer" name="amortization_system" type="radio" value="french"/>
+</div>
+<span class="text-xs text-on-surface-variant font-semibold mt-1">Cuota fija constante</span>
+<span class="text-[11px] text-secondary leading-tight mt-0.5">Ideal para previsión de presupuesto fijo.</span>
+</label>
+<label class="flex flex-col p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/30 cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold text-on-surface">Método Alemán</span>
+<input class="accent-primary w-4 h-4 cursor-pointer" name="amortization_system" type="radio" value="german"/>
+</div>
+<span class="text-xs text-on-surface-variant font-semibold mt-1">Abono capital fijo</span>
+<span class="text-[11px] text-secondary leading-tight mt-0.5">Cuotas decrecientes, menor interés total.</span>
+</label>
+</div>
+</div>
+<!-- Botones de Acción -->
+<div class="pt-space-xs flex flex-col sm:flex-row gap-space-sm">
+<button class="flex-1 h-11 px-space-md rounded-xl bg-primary hover:bg-primary/90 text-on-primary font-bold text-xs flex items-center justify-center gap-space-xs shadow-sm transition-all" id="btn-recalculate" type="button">
+<span class="material-symbols-outlined text-[18px]">calculate</span>
+            Recalcular Proyección
+          </button>
+<button class="h-11 px-space-md rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-on-surface font-semibold text-xs flex items-center justify-center gap-space-xs transition-all" id="btn-compare" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">compare_arrows</span>
+            Comparar Ambos
+          </button>
+</div>
+</div>
+<!-- Tip Fiscal y Regulatorio DIAN (Ocre/Ámbar) -->
+<div class="p-space-md rounded-xl bg-tertiary-fixed/30 border border-tertiary-container/40 flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[22px] shrink-0 mt-0.5">account_balance</span>
+<div class="flex flex-col space-y-0.5">
+<span class="text-xs uppercase font-bold text-tertiary tracking-wide">Estatuto Tributario Art. 117</span>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+            Los intereses causados por créditos comerciales de capital de trabajo son deducibles en 100% de la Renta Líquida Gravable, bajo límite de subcapitalización.
+          </p>
+</div>
+</div>
+</div>
+<!-- COLUMNA DERECHA: Tablero de Métricas Financieras (KPIs) & Gráfico Dinámico -->
+<div class="lg:col-span-7 flex flex-col space-y-space-md">
+<!-- Bento Grid de KPIs Financieros -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<!-- Cuota Mensual -->
+<div class="p-space-md rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-xs flex flex-col justify-between space-y-2 relative overflow-hidden">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold uppercase tracking-wider text-secondary">Cuota Mensual Promedio</span>
+<span class="material-symbols-outlined text-primary text-[20px]">event_repeat</span>
+</div>
+<div>
+<div class="font-headline text-2xl text-primary font-bold tracking-tight tabular-nums" id="kpi-cuota">$ 3.038.450</div>
+<span class="text-xs text-secondary">Incluye seguro deudor ($ 35.000/mes)</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden mt-1">
+<div class="h-full bg-primary w-2/3 rounded-full"></div>
+</div>
+</div>
+<!-- Total de Intereses (Terracota) -->
+<div class="p-space-md rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-xs flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold uppercase tracking-wider text-secondary">Total Intereses</span>
+<span class="px-2 py-0.5 rounded-lg bg-terracota-bg text-terracota text-[11px] font-bold border border-terracota/20">Costo Deuda</span>
+</div>
+<div>
+<div class="font-headline text-2xl text-terracota font-bold tracking-tight tabular-nums" id="kpi-intereses">$ 24.384.200</div>
+<span class="text-xs text-secondary">M.V. Efectivo Acumulado en 36 m</span>
+</div>
+<div class="flex items-center gap-1 text-xs text-secondary">
+<span class="material-symbols-outlined text-[15px] text-terracota">percent</span>
+<span class="font-medium">28.69% sobre el capital inicial</span>
+</div>
+</div>
+<!-- Costo Total del Crédito -->
+<div class="p-space-md rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-xs flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold uppercase tracking-wider text-secondary">Costo Total del Crédito</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">account_balance_wallet</span>
+</div>
+<div>
+<div class="font-headline text-2xl text-on-surface font-bold tracking-tight tabular-nums" id="kpi-total">$ 109.384.200</div>
+<span class="text-xs text-secondary">Capital ($85M) + Intereses + Pólizas</span>
+</div>
+<span class="text-xs text-secondary font-medium">Amortización completa proyectada</span>
+</div>
+<!-- Capacidad de Pago Operativa -->
+<div class="p-space-md rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-xs flex flex-col justify-between space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold uppercase tracking-wider text-secondary">Capacidad de Pago Operativa</span>
+<span class="flex h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-primary/20"></span>
+</div>
+<div>
+<div class="flex items-center gap-1.5 text-primary">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+<span class="font-headline text-xl font-bold">Apto (8.9%)</span>
+</div>
+<span class="text-xs text-secondary">Impacto moderado en flujo de caja</span>
+</div>
+<span class="text-xs text-primary font-semibold">Límite recomendado: hasta 25%</span>
+</div>
+</div>
+<!-- Gráfico Proporcional de Composición: Capital vs Intereses vs Seguros -->
+<div class="p-space-lg rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-xs flex flex-col space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-headline text-base font-bold text-on-surface">Descomposición del Desembolso</span>
+<span class="text-xs text-secondary">Distribución del valor total a pagar a lo largo de los 36 meses</span>
+</div>
+<span class="text-xs text-secondary font-medium">Francés: Cuota nivelada</span>
+</div>
+<!-- Barra segmentada de porcentaje (Paleta Terra) -->
+<div class="w-full space-y-space-xs">
+<div class="h-6 w-full rounded-xl overflow-hidden flex shadow-inner bg-surface-container">
+<div class="bg-primary hover:opacity-95 transition-all flex items-center justify-center text-on-primary text-xs font-bold" style="width: 77.7%;">
+              77.7% Capital
+            </div>
+<div class="bg-terracota hover:opacity-95 transition-all flex items-center justify-center text-white text-xs font-bold" style="width: 21.1%;">
+              21.1%
+            </div>
+<div class="bg-tertiary-container hover:opacity-95 transition-all" style="width: 1.2%;" title="Seguros 1.2%"></div>
+</div>
+<div class="flex flex-wrap items-center justify-between text-xs pt-1 text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span>Capital Neto: <strong class="text-on-surface tabular-nums">$ 85.000.000 COP</strong></span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-terracota"></span>
+<span>Intereses Totales: <strong class="text-terracota tabular-nums">$ 23.124.200 COP</strong></span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-tertiary-container"></span>
+<span>Seguros: <strong class="text-tertiary tabular-nums">$ 1.260.000 COP</strong></span>
+</div>
+</div>
+</div>
+<!-- Curva Visual SVG de Amortización (Sparkline comparativo Capital vs Interés) -->
+<div class="w-full pt-space-xs">
+<div class="flex justify-between items-center text-xs text-secondary mb-1">
+<span>Evolución mensual (Mes 1 a Mes 36)</span>
+<span class="font-medium text-terracota">Interés decrece <span class="text-secondary">/</span> <span class="text-primary font-bold">Capital asciende</span></span>
+</div>
+<svg class="w-full h-16 overflow-visible" preserveaspectratio="none" viewbox="0 0 500 60">
+<!-- Curva de Amortización Capital (Creciente en Verde Bosque) -->
+<path class="text-primary" d="M 0,50 Q 250,35 500,8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- Curva de Interés (Decreciente en Terracota) -->
+<path class="text-terracota" d="M 0,15 Q 250,42 500,56" fill="none" stroke="currentColor" stroke-dasharray="4 4" stroke-linecap="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+</div>
+<!-- SECCIÓN INFERIOR: Tabla Completa de Amortización -->
+<div class="p-space-lg rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-sm space-y-space-md">
+<!-- Barra de Herramientas de la Tabla -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[22px]">table_view</span>
+<h3 class="font-headline text-lg font-bold text-on-surface">Tabla de Amortización Detallada</h3>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container border border-outline-variant/30 text-secondary text-xs font-bold">
+          36 Períodos
+        </span>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm">
+<!-- Selector Vista Mensual / Anual -->
+<div class="flex items-center p-1 rounded-xl bg-surface-container border border-outline-variant/25">
+<button class="px-3 py-1 rounded-lg bg-surface-container-lowest text-primary text-xs font-bold shadow-xs" id="view-monthly">
+            Vista Mensual
+          </button>
+<button class="px-3 py-1 rounded-lg text-secondary hover:text-on-surface text-xs font-medium" id="view-yearly">
+            Resumen Anual
+          </button>
+</div>
+<!-- Botones de Exportación -->
+<button class="h-9 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-primary text-xs font-bold flex items-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+          Exportar PDF
+        </button>
+<button class="h-9 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-primary text-xs font-bold flex items-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">table_chart</span>
+          Excel (.xlsx)
+        </button>
+</div>
+</div>
+<!-- Contenedor con Scroll para Tabla de Amortización -->
+<div class="overflow-x-auto rounded-xl border border-outline-variant/30 bg-surface-container-lowest">
+<table class="w-full border-collapse text-left text-sm">
+<thead>
+<tr class="bg-surface-container text-secondary text-[11px] font-bold uppercase tracking-wider border-b border-outline-variant/30">
+<th class="py-3 px-space-md text-left">N° Cuota</th>
+<th class="py-3 px-space-md text-left">Fecha Vencimiento</th>
+<th class="py-3 px-space-md text-right">Cuota Total (COP)</th>
+<th class="py-3 px-space-md text-right">Abono a Capital</th>
+<th class="py-3 px-space-md text-right">Interés Período</th>
+<th class="py-3 px-space-md text-right">Seguro Deudor</th>
+<th class="py-3 px-space-md text-right">Saldo Pendiente</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20 text-on-surface tabular-nums" id="amortization-table-body">
+<!-- Cuota 0 (Desembolso Inicial) -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-2.5 px-space-md font-bold text-primary">0</td>
+<td class="py-2.5 px-space-md text-xs text-secondary">15/11/2024 (Desembolso)</td>
+<td class="py-2.5 px-space-md text-right text-secondary">-</td>
+<td class="py-2.5 px-space-md text-right text-secondary">-</td>
+<td class="py-2.5 px-space-md text-right text-secondary">-</td>
+<td class="py-2.5 px-space-md text-right text-secondary">-</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 85.000.000</td>
+</tr>
+<!-- Mes 1 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-2.5 px-space-md font-bold text-on-surface">Mes 1</td>
+<td class="py-2.5 px-space-md text-xs text-secondary">15/12/2024</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 3.038.450</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 1.831.783</td>
+<td class="py-2.5 px-space-md text-right font-semibold text-terracota">$ 1.171.667</td>
+<td class="py-2.5 px-space-md text-right text-tertiary font-medium">$ 35.000</td>
+<td class="py-2.5 px-space-md text-right font-medium text-on-surface">$ 83.168.217</td>
+</tr>
+<!-- Mes 2 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-2.5 px-space-md font-bold text-on-surface">Mes 2</td>
+<td class="py-2.5 px-space-md text-xs text-secondary">15/01/2025</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 3.038.450</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 1.857.062</td>
+<td class="py-2.5 px-space-md text-right font-semibold text-terracota">$ 1.146.388</td>
+<td class="py-2.5 px-space-md text-right text-tertiary font-medium">$ 35.000</td>
+<td class="py-2.5 px-space-md text-right font-medium text-on-surface">$ 81.311.155</td>
+</tr>
+<!-- Mes 3 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-2.5 px-space-md font-bold text-on-surface">Mes 3</td>
+<td class="py-2.5 px-space-md text-xs text-secondary">15/02/2025</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 3.038.450</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 1.882.690</td>
+<td class="py-2.5 px-space-md text-right font-semibold text-terracota">$ 1.120.760</td>
+<td class="py-2.5 px-space-md text-right text-tertiary font-medium">$ 35.000</td>
+<td class="py-2.5 px-space-md text-right font-medium text-on-surface">$ 79.428.465</td>
+</tr>
+<!-- Mes 4 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-2.5 px-space-md font-bold text-on-surface">Mes 4</td>
+<td class="py-2.5 px-space-md text-xs text-secondary">15/03/2025</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 3.038.450</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 1.908.671</td>
+<td class="py-2.5 px-space-md text-right font-semibold text-terracota">$ 1.094.779</td>
+<td class="py-2.5 px-space-md text-right text-tertiary font-medium">$ 35.000</td>
+<td class="py-2.5 px-space-md text-right font-medium text-on-surface">$ 77.519.794</td>
+</tr>
+<!-- Mes 5 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-2.5 px-space-md font-bold text-on-surface">Mes 5</td>
+<td class="py-2.5 px-space-md text-xs text-secondary">15/04/2025</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 3.038.450</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 1.935.011</td>
+<td class="py-2.5 px-space-md text-right font-semibold text-terracota">$ 1.068.439</td>
+<td class="py-2.5 px-space-md text-right text-tertiary font-medium">$ 35.000</td>
+<td class="py-2.5 px-space-md text-right font-medium text-on-surface">$ 75.584.783</td>
+</tr>
+<!-- Mes 6 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-2.5 px-space-md font-bold text-on-surface">Mes 6</td>
+<td class="py-2.5 px-space-md text-xs text-secondary">15/05/2025</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 3.038.450</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 1.961.714</td>
+<td class="py-2.5 px-space-md text-right font-semibold text-terracota">$ 1.041.736</td>
+<td class="py-2.5 px-space-md text-right text-tertiary font-medium">$ 35.000</td>
+<td class="py-2.5 px-space-md text-right font-medium text-on-surface">$ 73.623.069</td>
+</tr>
+<!-- Separador estilizado de filas intermedias -->
+<tr class="bg-surface-container/60">
+<td class="py-2 px-space-md text-center text-xs font-semibold text-secondary" colspan="7">
+              • • • Meses 7 al 34 proyectados de forma continua bajo tasa pactada de 1.42% M.V. • • •
+            </td>
+</tr>
+<!-- Mes 35 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-2.5 px-space-md font-bold text-on-surface">Mes 35</td>
+<td class="py-2.5 px-space-md text-xs text-secondary">15/10/2027</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 3.038.450</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 2.918.420</td>
+<td class="py-2.5 px-space-md text-right font-semibold text-terracota">$ 85.030</td>
+<td class="py-2.5 px-space-md text-right text-tertiary font-medium">$ 35.000</td>
+<td class="py-2.5 px-space-md text-right font-medium text-on-surface">$ 2.956.840</td>
+</tr>
+<!-- Mes 36 (Final) -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-2.5 px-space-md font-bold text-on-surface">Mes 36</td>
+<td class="py-2.5 px-space-md text-xs text-secondary">15/11/2027</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 3.038.450</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 2.956.840</td>
+<td class="py-2.5 px-space-md text-right font-semibold text-terracota">$ 46.610</td>
+<td class="py-2.5 px-space-md text-right text-tertiary font-medium">$ 35.000</td>
+<td class="py-2.5 px-space-md text-right font-bold text-primary">$ 0</td>
+</tr>
+</tbody>
+<!-- Fila de Totales Acumulados -->
+<tfoot>
+<tr class="bg-surface-container font-bold text-on-surface border-t-2 border-outline-variant/30">
+<td class="py-3 px-space-md font-headline text-base text-primary" colspan="2">Totales Acumulados</td>
+<td class="py-3 px-space-md text-right text-primary tabular-nums">$ 109.384.200</td>
+<td class="py-3 px-space-md text-right text-primary tabular-nums">$ 85.000.000</td>
+<td class="py-3 px-space-md text-right text-terracota tabular-nums">$ 23.124.200</td>
+<td class="py-3 px-space-md text-right text-tertiary tabular-nums">$ 1.260.000</td>
+<td class="py-3 px-space-md text-right text-xs uppercase font-bold text-primary">Cancelado 100%</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<!-- Paginación y Nota Fiscal al Pie -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-space-sm pt-space-xs text-xs text-secondary">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-tertiary">info</span>
+<span>Liquidación calculada con base en año comercial de 360 días / meses de 30 días según estándar bancario SFC.</span>
+</div>
+<div class="flex items-center gap-space-xs font-semibold">
+<span>Registro ContaPyme: SIM-2024-8842</span>
+</div>
+</div>
+</div>
+<!-- Modal / Drawer Contextual de Comparación Francés vs Alemán -->
+<div class="hidden fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm flex justify-center items-center p-4" id="comparison-drawer">
+<div class="w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-xl p-space-lg space-y-space-md border border-outline-variant/40">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[24px]">balance</span>
+<h3 class="font-headline text-xl font-bold text-on-surface">Comparativo: Francés vs. Alemán</h3>
+</div>
+<button class="p-1 rounded-xl text-secondary hover:bg-surface-container" id="close-modal-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-space-md">
+<!-- Método Francés -->
+<div class="p-space-md rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold text-primary">Método Francés (Actual)</span>
+<span class="px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-bold">Cuota Fija</span>
+</div>
+<div class="space-y-1 text-xs tabular-nums">
+<div class="flex justify-between text-secondary"><span>Cuota Mensual:</span> <strong class="text-on-surface font-bold">$ 3.038.450</strong></div>
+<div class="flex justify-between text-secondary"><span>Intereses Totales:</span> <strong class="text-terracota font-bold">$ 24.384.200</strong></div>
+<div class="flex justify-between text-secondary"><span>Desembolso Total:</span> <strong class="text-on-surface font-bold">$ 109.384.200</strong></div>
+</div>
+<p class="text-[11px] text-secondary leading-relaxed pt-1">
+            Garantiza que la PyME reserve exactamente la misma partida presupuestal cada mes sin sobresaltos.
+          </p>
+</div>
+<!-- Método Alemán -->
+<div class="p-space-md rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold text-secondary">Método Alemán</span>
+<span class="px-2 py-0.5 rounded-lg bg-secondary-container text-on-secondary-container text-xs font-bold">Decreciente</span>
+</div>
+<div class="space-y-1 text-xs tabular-nums">
+<div class="flex justify-between text-secondary"><span>Cuota Inicial (M1):</span> <strong class="text-on-surface font-bold">$ 3.568.333</strong></div>
+<div class="flex justify-between text-secondary"><span>Cuota Final (M36):</span> <strong class="text-on-surface font-bold">$ 2.394.444</strong></div>
+<div class="flex justify-between text-secondary"><span>Intereses Totales:</span> <strong class="text-primary font-bold">$ 22.312.500</strong></div>
+</div>
+<p class="text-[11px] text-secondary leading-relaxed pt-1">
+            Ahorro de <strong class="text-primary">$ 2.071.700 COP</strong> en intereses, exigiendo mayor liquidez los primeros 12 meses.
+          </p>
+</div>
+</div>
+<div class="flex justify-end pt-2">
+<button class="px-space-md py-2 rounded-xl bg-primary hover:bg-primary/90 text-on-primary text-xs font-bold transition-all" id="close-modal-footer" type="button">
+          Entendido, cerrar análisis
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Sincronización entre Input numérico y Slider de Monto
+  const montoInput = document.getElementById('monto-input');
+  const montoSlider = document.getElementById('monto-slider');
+  const tasaEaInput = document.getElementById('tasa-ea-input');
+  const tasaMvDisplay = document.getElementById('tasa-mv-display');
+  const kpiCuota = document.getElementById('kpi-cuota');
+  const kpiIntereses = document.getElementById('kpi-intereses');
+  const kpiTotal = document.getElementById('kpi-total');
+  const termButtons = document.querySelectorAll('#term-selector button');
+  const btnRecalculate = document.getElementById('btn-recalculate');
+  const btnCompare = document.getElementById('btn-compare');
+  const comparisonDrawer = document.getElementById('comparison-drawer');
+  const closeModalBtn = document.getElementById('close-modal-btn');
+  const closeModalFooter = document.getElementById('close-modal-footer');
+
+  let selectedTerm = 36;
+
+  function formatCOP(num) {
+    return '$ ' + Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
+  function cleanCOP(str) {
+    return parseFloat(str.replace(/[^0-9]/g, '')) || 0;
+  }
+
+  // Tasa MV a partir de EA: (1 + EA)^(1/12) - 1
+  function calculateMV(eaPercentage) {
+    const ea = eaPercentage / 100;
+    const mv = Math.pow(1 + ea, 1 / 12) - 1;
+    return mv;
+  }
+
+  function updateCalculations() {
+    const principal = cleanCOP(montoInput.value);
+    const ea = parseFloat(tasaEaInput.value) || 18.5;
+    const mv = calculateMV(ea);
+    
+    tasaMvDisplay.textContent = (mv * 100).toFixed(2) + '%';
+
+    // Cuota Fija (Método Francés): R = P * [ i / (1 - (1+i)^-n) ]
+    const insurance = 35000;
+    let cuotaSinSeguro = 0;
+    if (mv > 0) {
+      cuotaSinSeguro = principal * (mv / (1 - Math.pow(1 + mv, -selectedTerm)));
+    } else {
+      cuotaSinSeguro = principal / selectedTerm;
+    }
+
+    const cuotaTotal = cuotaSinSeguro + insurance;
+    const totalPagar = (cuotaTotal * selectedTerm);
+    const totalIntereses = totalPagar - principal - (insurance * selectedTerm);
+
+    kpiCuota.textContent = formatCOP(cuotaTotal);
+    kpiIntereses.textContent = formatCOP(totalIntereses);
+    kpiTotal.textContent = formatCOP(totalPagar);
+  }
+
+  montoSlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value);
+    montoInput.value = val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    updateCalculations();
+  });
+
+  montoInput.addEventListener('input', (e) => {
+    const val = cleanCOP(e.target.value);
+    montoSlider.value = val;
+    montoInput.value = val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  });
+
+  tasaEaInput.addEventListener('input', updateCalculations);
+
+  // Selector de Plazo en meses
+  termButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      termButtons.forEach(b => {
+        b.classList.remove('bg-primary', 'text-on-primary', 'font-bold', 'shadow-xs', 'border-primary');
+        b.classList.add('bg-surface-container-lowest', 'text-on-surface', 'font-semibold', 'border-outline-variant/30');
+      });
+      btn.classList.add('bg-primary', 'text-on-primary', 'font-bold', 'shadow-xs', 'border-primary');
+      btn.classList.remove('bg-surface-container-lowest', 'text-on-surface', 'font-semibold', 'border-outline-variant/30');
+      selectedTerm = parseInt(btn.getAttribute('data-term'));
+      updateCalculations();
+    });
+  });
+
+  btnRecalculate.addEventListener('click', () => {
+    btnRecalculate.classList.add('scale-95');
+    setTimeout(() => {
+      btnRecalculate.classList.remove('scale-95');
+      updateCalculations();
+    }, 150);
+  });
+
+  // Modal Comparativo
+  btnCompare.addEventListener('click', () => {
+    comparisonDrawer.classList.remove('hidden');
+  });
+
+  const hideModal = () => comparisonDrawer.classList.add('hidden');
+  closeModalBtn.addEventListener('click', hideModal);
+  closeModalFooter.addEventListener('click', hideModal);
+</script></main></div></body></html>

@@ -7,7 +7,7 @@
 
 .card {
     background: var(--surface);
-    border: 0;
+    border: 1px solid var(--border);
     border-radius: var(--r-xl);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
@@ -41,7 +41,7 @@
     position: relative;
     padding: var(--sp-4) var(--sp-5);
     background: var(--surface);
-    border: 0;
+    border: 1px solid var(--border);
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-sm);
     display: flex;
@@ -72,10 +72,10 @@
 }
 
 .kpi-value {
-    font-family: var(--font-display);
-    font-size: 1.62rem;
-    font-weight: 700;
-    letter-spacing: -0.025em;
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.04em;
     font-variant-numeric: tabular-nums;
     word-break: break-word;
     line-height: 1.15;
@@ -83,15 +83,16 @@
 
 .kpi-context { font-size: 0.75rem; color: var(--text-soft); font-weight: 500; }
 
-/* La primera tarjeta de cada fila de KPIs manda la jerarquía */
+/* La primera tarjeta de cada fila de KPIs manda la jerarquía: tarjeta verde de marca */
 .grid-kpi > .kpi:first-child {
     background: linear-gradient(150deg, var(--night-2) 0%, var(--night) 100%);
+    border-color: transparent;
     color: #ffffff;
 }
 
-.grid-kpi > .kpi:first-child::before { background: var(--accent); }
-.grid-kpi > .kpi:first-child .kpi-label { color: #c7b9ea; }
-.grid-kpi > .kpi:first-child .kpi-context { color: #a99ad1; }
+.grid-kpi > .kpi:first-child::before { background: #f8e0a8; }
+.grid-kpi > .kpi:first-child .kpi-label { color: rgba(255, 255, 255, 0.82); }
+.grid-kpi > .kpi:first-child .kpi-context { color: rgba(255, 255, 255, 0.78); }
 
 /* ---------- Botones ---------- */
 
@@ -102,9 +103,9 @@
     gap: var(--sp-2);
     padding: 11px 22px;
     border: 0;
-    border-radius: var(--r-pill);
+    border-radius: var(--r-md);
     background: var(--primary);
-    color: #ffffff;
+    color: var(--on-primary);
     font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
@@ -115,32 +116,34 @@
 
 .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
 
-/* En tema oscuro el morado se aclara para separarse del fondo, y el blanco
-   deja de contrastar sobre él: la pastilla pasa a texto casi negro. */
-[data-theme="dark"] .btn { color: var(--accent-ink); }
-[data-theme="dark"] .btn-secondary { color: var(--text); }
+/* En tema oscuro el verde se aclara para separarse del fondo y el texto
+   de los botones pasa a verde muy oscuro para conservar el contraste. */
+[data-theme="dark"] .btn { color: var(--on-primary); }
+[data-theme="dark"] .btn-secondary { color: var(--primary); }
 [data-theme="dark"] .btn-ghost { color: var(--text-muted); }
-[data-theme="dark"] .btn-danger { color: var(--accent-ink); }
+[data-theme="dark"] .btn-danger { color: #ffffff; }
 [data-theme="dark"] .segmented button[aria-pressed="true"],
-[data-theme="dark"] .tabs button[aria-selected="true"] { color: var(--accent-ink); }
+[data-theme="dark"] .tabs button[aria-selected="true"] { color: var(--on-primary); }
 .btn:active { transform: none; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; transform: none; }
 
+/* Secundario Terra: fondo crema, texto verde y borde fino */
 .btn-secondary {
     background: var(--surface);
-    color: var(--text);
-    box-shadow: var(--shadow-sm);
+    color: var(--primary-hover);
+    border: 1px solid var(--border-strong);
+    box-shadow: none;
 }
-.btn-secondary:hover { background: var(--surface-2); color: var(--text); }
+.btn-secondary:hover { background: var(--primary-soft); color: var(--primary-hover); }
 
 .btn-ghost { background: transparent; color: var(--text-muted); box-shadow: none; }
 .btn-ghost:hover { background: var(--surface-2); color: var(--text); transform: none; }
 
-.btn-danger { background: var(--danger-solid); box-shadow: 0 6px 18px rgba(255, 77, 109, 0.3); }
+.btn-danger { background: var(--danger-solid); box-shadow: 0 4px 14px rgba(192, 86, 70, 0.24); }
 .btn-danger:hover { background: var(--danger-solid); filter: brightness(0.94); }
 
-/* Acciones cortas de fila (Abonar, Liquidar, Pagar): verde vivo.
-   El morado queda para las acciones que crean un documento. */
+/* Acciones cortas de fila (Abonar, Liquidar, Pagar): verde suave.
+   El verde sólido queda para las acciones que crean un documento. */
 .btn.btn-sm:not(.btn-secondary):not(.btn-ghost):not(.btn-danger) {
     background: var(--accent);
     color: var(--accent-ink);
@@ -159,9 +162,9 @@
     place-items: center;
     width: 38px;
     height: 38px;
-    border: 0;
-    border-radius: var(--r-pill);
-    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--surface);
     color: var(--text-muted);
     font-size: 1rem;
     cursor: pointer;
@@ -481,9 +484,9 @@ table.data td.wrap { white-space: normal; min-width: 190px; font-weight: 600; }
     animation: toast-in 0.2s ease;
 }
 
-.toast-success { border-left-color: #12c48b; }
+.toast-success { border-left-color: var(--success); }
 .toast-error   { border-left-color: var(--danger-solid); }
-.toast-warning { border-left-color: #ffb020; }
+.toast-warning { border-left-color: var(--c3); }
 .toast-info    { border-left-color: var(--primary); }
 
 .toast .toast-title { font-weight: 800; font-size: 0.85rem; }
@@ -503,7 +506,7 @@ table.data td.wrap { white-space: normal; min-width: 190px; font-weight: 600; }
     display: grid;
     place-items: center;
     padding: var(--sp-4);
-    background: rgba(13, 5, 24, 0.55);
+    background: rgba(46, 50, 48, 0.45);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     overflow-y: auto;
@@ -678,7 +681,7 @@ table.data td.wrap { white-space: normal; min-width: 190px; font-weight: 600; }
 }
 
 .tabs button:hover { color: var(--text); }
-.tabs button[aria-selected="true"] { background: var(--primary); color: #ffffff; }
+.tabs button[aria-selected="true"] { background: var(--primary); color: var(--on-primary); }
 
 /* ---------- Tablero: diez indicadores en dos filas ---------- */
 
@@ -736,7 +739,7 @@ table.data td.wrap { white-space: normal; min-width: 190px; font-weight: 600; }
     font-weight: 800;
 }
 
-[data-theme="dark"] .dropzone-icon { color: var(--accent-ink); }
+[data-theme="dark"] .dropzone-icon { color: var(--on-primary); }
 
 .dropzone strong { font-family: var(--font-display); font-size: 1rem; }
 .dropzone p { font-size: 0.8rem; color: var(--text-muted); max-width: 46ch; }
@@ -903,4 +906,42 @@ table.data td.wrap { white-space: normal; min-width: 190px; font-weight: 600; }
     .kpi-mini-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .dash-filtros { position: static; }
     .kpi-hero .kpi-value { font-size: 1.6rem; }
+}
+
+
+/* ---------- Íconos de línea (Material Symbols) ---------- */
+
+/* La fuente trae solo los íconos que usa la app (index.html). Sin red, el nombre
+   del ícono queda recortado dentro de su caja en lugar de desbordar el menú. */
+.icono {
+    font-family: "Material Symbols Outlined";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    overflow: hidden;
+    font-feature-settings: "liga";
+    -webkit-font-feature-settings: "liga";
+    -webkit-font-smoothing: antialiased;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.nav-item .nav-icon.icono { width: 22px; height: 22px; font-size: 21px; }
+.nav-item[aria-current="page"] .nav-icon.icono { font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24; }
+.icon-btn.icono { font-size: 20px; }
+
+/* Títulos de vista y tarjetas con la serif Terra; cifras de totales en monoespaciada */
+.view-head h1 { font-size: 1.85rem; font-weight: 700; color: var(--text); }
+.card-head h2 { font-size: 1.05rem; }
+.totals-line.total span:last-child { font-family: var(--font-mono); }
+
+/* Objetivos táctiles de al menos 44 px */
+.nav-item { min-height: 44px; }
+@media (max-width: 860px) {
+    .icon-btn { width: 44px; height: 44px; }
 }

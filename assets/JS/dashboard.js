@@ -428,8 +428,8 @@ ERP.dashboard = (() => {
                                 ERP.charts.lineas({
                                     etiquetas: serie.etiquetas,
                                     series: [
-                                        { nombre: 'Ventas', datos: serie.ingresos },
-                                        { nombre: 'Gastos', datos: serie.gastos }
+                                        { nombre: 'Ventas', datos: serie.ingresos, color: 'var(--c1)' },
+                                        { nombre: 'Gastos', datos: serie.gastos, color: 'var(--c6)' }
                                     ]
                                 }),
                                 { subtitulo: `Agrupación ${serie.granularidad}` })
