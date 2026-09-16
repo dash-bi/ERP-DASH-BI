@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 1.8.0 | 2026-09-15 | *(esta versión)* | **Piel visual Terra:** rediseño basado en los diseños de Stitch (.design/stitch_erp_financiero_colombiano): verde bosque #4a7c59 sobre crema #faf6f0 con ámbar y terracota, Literata para títulos, Nunito Sans para textos y JetBrains Mono para cifras, menú lateral claro con íconos Material Symbols, tarjetas con borde fino, esquinas de 12 px y sombras suaves, ventas en verde y gastos en terracota en los gráficos, tema oscuro cálido y objetivos táctiles de 44 px. Sin cambios de funcionalidad. |
+| 1.9.0 | 2026-09-15 | *(esta versión)* | Conexión con Supabase: base de datos compartida con descarga y subida de instantáneas, control de revisiones y subida automática opcional |
+| 1.8.0 | 2026-09-15 | `ca1c152` | **Piel visual Terra:** rediseño basado en los diseños de Stitch (.design/stitch_erp_financiero_colombiano): verde bosque #4a7c59 sobre crema #faf6f0 con ámbar y terracota, Literata para títulos, Nunito Sans para textos y JetBrains Mono para cifras, menú lateral claro con íconos Material Symbols, tarjetas con borde fino, esquinas de 12 px y sombras suaves, ventas en verde y gastos en terracota en los gráficos, tema oscuro cálido y objetivos táctiles de 44 px. Sin cambios de funcionalidad. |
 | 1.7.1 | 2026-09-14 | `f1c6bf3` | **Migración a Supabase, etapa 1:** esquema de 14 tablas con RLS por empresa y por módulo creado en el proyecto «ERP Financiero» (supabase/001_esquema_inicial.sql y 002_funciones_permisos_privadas.sql), probado con usuarios simulados. La app todavía usa localStorage. |
 | 1.7.0 | 2026-09-14 | `ef83a47` | **Tablero ejecutivo rediseñado:** jerarquía real de indicadores (4 principales con variación contra el periodo anterior y minigráfica de tendencia, 6 secundarios compactos), rejilla de 12 columnas con Ventas contra gastos, Cartera por antigüedad, Productos más vendidos y Distribución de gastos, barra de filtros fija al desplazarse y estado vacío explicado con acciones. Nuevo cálculo `ERP.finanzas.carteraPorAntiguedad` y nueva minigráfica `ERP.charts.chispa`. |
 | 1.6.2 | 2026-09-14 | `c6b0fb8` | **Ventas sin «Cargar factura PDF»:** se retira ese botón de la pestaña de Ventas. Compras y Gastos lo conservan, y una factura de venta leída desde allí sigue abriendo el formulario de ventas prellenado. |
@@ -88,7 +89,7 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 ### Carga y módulos
 
 - **Scripts clásicos**, sin módulos ES, para que funcione en `file://`. Cada archivo es un IIFE que asigna una API pública a `ERP.<modulo>`.
-- **El orden de `<script>` en `index.html` es la dependencia:** `util → db → ui → charts/pdf/xlsx/pdfreader → lines → auth → negocio → financials → dashboard → tools/payroll → app`. Las referencias a módulos cargados después solo son válidas dentro de funciones que se ejecutan más tarde (p. ej. `ERP.configuracion` usa `ERP.app.MODULOS`).
+- **El orden de `<script>` en `index.html` es la dependencia:** `util → db → ui → charts/pdf/xlsx/pdfreader → lines → auth → nube → negocio → financials → dashboard → tools/payroll → app`. Las referencias a módulos cargados después solo son válidas dentro de funciones que se ejecutan más tarde (p. ej. `ERP.configuracion` usa `ERP.app.MODULOS`).
 - **Agregar un módulo** exige tres cambios:
   1. Su `<script>` en `index.html`.
   2. Su entrada en `MODULOS` (y `GRUPOS`) de `app.js`.
@@ -127,8 +128,9 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 - **Objetivo aprobado por el usuario:** reemplazar `localStorage` por una base compartida, con Supabase Auth y reglas por rol, para que local, Vercel y cualquier equipo vean los mismos datos. Al terminar, `datos-publicados.js` dejará de ser necesario y los datos saldrán del repositorio público.
 - **Etapas:**
   1. **Esquema. HECHO el 2026-09-14.** `supabase/001_esquema_inicial.sql` y `supabase/002_funciones_permisos_privadas.sql` están aplicados.
-  2. **Migración de datos DASH-BI. PENDIENTE.** Necesita un correo por usuario: las contraseñas djb2 no se pueden migrar a Supabase Auth.
-  3. **Conexión de la app. PENDIENTE.** Funciones transaccionales para registrar ventas, compras, abonos y pagos (existencias, costo ponderado y saldos en una operación), y reemplazo de `db.js` módulo por módulo.
+  2. **Conexión de la app. HECHA el 2026-09-15.** `supabase/003_conexion_app.sql`, `004_endurecer_anon.sql` y `005_indice_sincronizado_por.sql`, más `assets/JS/nube.js` y la tarjeta «Nube (Supabase)» de Configuración. Ver *Nube: la base compartida*.
+  3. **Escritura directa contra PostgreSQL. PENDIENTE.** Funciones transaccionales para registrar ventas, compras, abonos y pagos (existencias, costo ponderado y saldos en una operación) y reemplazo de `db.js` módulo por módulo. Hasta entonces la app calcula en el navegador y sincroniza el conjunto completo.
+- **Lo que falta del lado del usuario:** crear en Supabase (Authentication → Users) un usuario por persona que vaya a sincronizar. Las contraseñas djb2 de la app no se pueden migrar a Supabase Auth, así que las dos autenticaciones conviven: la local decide qué ve cada quien dentro de la app, y la de Supabase decide quién toca los datos compartidos.
 - **Modelo:**
   - 14 tablas con `empresa_id`, que permiten varias empresas.
   - Los `id` son texto: se conservan los actuales al migrar y los nuevos reciben un UUID.
@@ -141,9 +143,27 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
   - Escritura: solo si `privado.puede_modulo(<módulo>)`, la misma regla que `ERP.auth.modulosDeRol`.
   - `empresas` y `perfiles` solo los modifica el administrador.
   - `privado.empresa_actual()`, `privado.rol_actual()` y `privado.puede_modulo()` no están expuestas en la API.
-  - `public.tomar_consecutivo('venta'|'compra')` numera de forma atómica. Es el único aviso restante del asesor de seguridad, y es intencional.
+  - `public.tomar_consecutivo('venta'|'compra')` numera de forma atómica.
+  - El asesor de seguridad deja 5 avisos `authenticated_security_definer_function_executable` (`mi_perfil`, `crear_empresa`, `descargar_snapshot`, `subir_snapshot` y `tomar_consecutivo`). **Son intencionales:** esas cinco funciones son la API de la app y cada una comprueba empresa, rol y permisos antes de actuar. Cualquier función nueva que no deba llamarse desde el navegador va al esquema `privado`.
 - **Verificado:** con una transacción revertida y usuarios simulados, el vendedor lee su empresa, crea clientes y numera ventas (FV-0001, FV-0002), pero no crea gastos, no escribe en otra empresa, no modifica la empresa ni numera compras. Otra empresa solo ve sus datos y un usuario sin sesión no ve nada. La base quedó vacía tras la prueba.
 - **Al tocar el esquema:** aplicar con `apply_migration`, guardar la misma migración como `supabase/00N_*.sql` y volver a revisar los asesores de seguridad y rendimiento. `supabase/` está en `.vercelignore`.
+
+### Nube: la base compartida
+
+- **Qué hace.** `assets/JS/nube.js` (`ERP.nube`) habla con la API de Supabase por `fetch`, sin librerías ni CDN, para que la app siga abriendo sin conexión. La interfaz es la tarjeta «Nube (Supabase)» de Configuración, y por tanto solo la ve el administrador.
+- **Modelo de sincronización: instantánea completa.** `subir` envía todo el conjunto y `descargar` lo trae todo, cada uno dentro de una sola transacción del servidor. Se eligió así porque la app calcula existencias, costo promedio y saldos en el navegador sobre el conjunto entero: subir documento por documento rompería esa coherencia a mitad de camino. El volumen lo permite (cientos de registros, menos de 1 MB).
+- **Funciones del servidor** (`supabase/003_conexion_app.sql`), todas `security definer` y solo para `authenticated`:
+  - `mi_perfil()` → empresa, rol, revisión. Devuelve `null` si la cuenta todavía no tiene perfil.
+  - `crear_empresa(razon_social, nit, usuario, nombre)` → resuelve el arranque en frío: `perfiles` solo admite altas del administrador y el primer usuario aún no tiene perfil. Quien la llama queda como administrador.
+  - `descargar_snapshot()` → devuelve el JSON **con la forma exacta de `db.js`** (camelCase, fechas `AAAA-MM-DD`).
+  - `subir_snapshot(payload, rev_base)` → valida, borra y reinserta. Solo el administrador.
+- **Control de concurrencia.** `empresas.rev` sube en cada carga. Quien sube declara la revisión de la que partió; si la nube ya va en otra, se rechaza con `CONFLICTO` y hay que descargar primero. Así dos equipos no se pisan en silencio.
+- **Validación previa a escribir.** `subir_snapshot` revisa la integridad referencial (ventas→clientes, ítems→productos, compras→proveedores, abonos→ventas, pagos→compras, nóminas→empleados) **antes** de borrar nada, y explica en español qué documento está suelto.
+- **Ida y vuelta sin pérdida.** Lo que sube es idéntico a lo que baja, incluidos decimales de costo, cantidades fraccionarias, `cufe`, `archivoOrigen`, cadenas vacías y los valores calculados de nómina, que viajan en `nominas.detalle` (jsonb) y se reconstruyen al descargar.
+- **Los usuarios de la app no viajan.** `subir` borra `usuarios` del paquete y `descargar` conserva los del navegador. Los hashes djb2 no deben salir del equipo, y quien controla el acceso a los datos compartidos es Supabase Auth con RLS.
+- **Subida automática (opcional).** Casilla en la misma tarjeta; solo para el administrador. Escucha `db:changed` con 4 s de espera. **No** reacciona a `importar`, `publicados`, `reset` ni `vaciar`: son reemplazos completos de los datos locales y propagarlos solos borraría el trabajo de los demás.
+- **Claves.** En `nube.js` está la URL del proyecto y la **clave publicable** (`sb_publishable_…`), que está pensada para vivir en el navegador: sin sesión no abre nada, porque `anon` ya no tiene permiso sobre las tablas (`004_endurecer_anon.sql`) y RLS filtra por empresa. La clave secreta (`service_role`) no debe aparecer nunca en el repositorio.
+- **Verificado el 2026-09-15:** en una transacción revertida, ida y vuelta completa de todas las colecciones sin pérdida; conflicto de revisión, venta huérfana y formato distinto rechazados con mensaje en español; el vendedor descarga pero no sube; sin perfil no se ve nada. Desde el navegador: credenciales inválidas → «Correo o contraseña incorrectos»; sin sesión, tabla y función responden 401; la tarjeta se ve bien en claro, oscuro y 375 px. La base quedó vacía tras las pruebas.
 
 ### Datos publicados con la app
 

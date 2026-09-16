@@ -6,7 +6,7 @@ window.ERP = window.ERP || {};
 
 /* Versión publicada. Al cambiarla, actualizar también el ?v= de index.html
    para que el navegador no reutilice los archivos anteriores. */
-ERP.VERSION = '1.8.0';
+ERP.VERSION = '1.9.0';
 
 /* ============================================================
    Configuración del sistema (solo administrador)
@@ -221,6 +221,240 @@ ERP.configuracion = (() => {
             el('div', { class: 'row row-wrap' }, [btnGuardar])
         ]), {
             subtitulo: 'Marque qué módulos ve cada rol. El administrador los ve todos y Configuración es solo suya.'
+        });
+    };
+
+    /* ---------- Nube: base de datos compartida en Supabase ---------- */
+
+    /**
+     * Enlaza este navegador con la base de datos del proyecto en Supabase.
+     * Descargar trae los datos compartidos; subir publica los de este equipo.
+     * El acceso a la nube es una cuenta de Supabase, distinta del usuario con
+     * el que se entra a la aplicación: la nube la protege Supabase Auth con RLS.
+     */
+    const tarjetaNube = () => {
+        const nube = ERP.nube;
+        const cuerpo = el('div', { class: 'stack' });
+
+        if (!nube || !nube.configurada()) {
+            cuerpo.appendChild(ui.banner('La nube no está configurada',
+                'Esta copia de la aplicación no trae los datos del proyecto de Supabase.', 'warning'));
+            return ui.card('Nube (Supabase)', cuerpo, { subtitulo: 'Base de datos compartida entre equipos' });
+        }
+
+        const fechaNube = (valor) => {
+            if (!valor) return 'nunca';
+            const d = new Date(valor);
+            return Number.isNaN(d.getTime()) ? 'nunca' : d.toLocaleString('es-CO');
+        };
+
+        const resumenDatos = (r) => [
+            `${U.num(r.ventas || 0)} ventas`, `${U.num(r.compras || 0)} compras`,
+            `${U.num(r.gastos || 0)} gastos`, `${U.num(r.productos || 0)} productos`,
+            `${U.num(r.clientes !== undefined ? r.clientes : r.terceros || 0)} ${r.clientes !== undefined ? 'clientes' : 'terceros'}`
+        ].join(', ');
+
+        /* ---- Sin conexión: se pide la cuenta de Supabase ---- */
+
+        const formularioAcceso = () => {
+            const campos = {
+                email: ui.input({ tipo: 'email', placeholder: 'correo@empresa.com', autocomplete: 'username' }),
+                clave: ui.input({ tipo: 'password', placeholder: 'Contraseña de Supabase', autocomplete: 'current-password' })
+            };
+            const errores = el('div');
+            const btn = el('button', { class: 'btn', text: 'Conectar', attrs: { type: 'submit' } });
+
+            const formulario = el('form', { class: 'stack' }, [
+                el('p', {
+                    class: 'text-muted',
+                    text: 'Use la cuenta de Supabase del proyecto. No es el usuario con el que entra a la aplicación: esa contraseña nunca sale de este navegador.'
+                }),
+                errores,
+                el('div', { class: 'grid-form' }, [
+                    ui.campo('Correo de Supabase', campos.email),
+                    ui.campo('Contraseña', campos.clave)
+                ]),
+                el('div', { class: 'row row-wrap' }, [btn])
+            ]);
+
+            formulario.addEventListener('submit', async (evento) => {
+                evento.preventDefault();
+                if (!autorizado()) return;
+                U.clear(errores);
+                btn.disabled = true;
+                btn.textContent = 'Conectando…';
+                const res = await nube.entrar(campos.email.value, campos.clave.value);
+                campos.clave.value = '';
+                btn.disabled = false;
+                btn.textContent = 'Conectar';
+                if (!res.ok) {
+                    errores.appendChild(ui.banner('No se pudo conectar', res.error, 'danger'));
+                    return;
+                }
+                ui.toastOk('Conectado a la nube', res.perfil
+                    ? `${res.perfil.empresa} · ${ERP.auth.etiquetaRol(res.perfil.rol)}`
+                    : 'Falta registrar la empresa en la nube.');
+                ERP.app.refrescar();
+            });
+
+            return formulario;
+        };
+
+        /* ---- Conectado sin empresa: se crea la primera ---- */
+
+        const formularioEmpresa = (cfg) => {
+            const campos = {
+                razonSocial: ui.input({ valor: cfg.empresa }),
+                nit: ui.input({ valor: cfg.nit })
+            };
+            const errores = el('div');
+            const btn = el('button', { class: 'btn', text: 'Crear la empresa en la nube', attrs: { type: 'button' } });
+
+            btn.addEventListener('click', async () => {
+                if (!autorizado()) return;
+                U.clear(errores);
+                btn.disabled = true;
+                const actual = ERP.auth.usuario();
+                const res = await nube.crearEmpresa({
+                    razonSocial: campos.razonSocial.value,
+                    nit: campos.nit.value,
+                    usuario: actual ? actual.usuario : 'admin',
+                    nombre: actual ? actual.nombre : 'Administrador'
+                });
+                btn.disabled = false;
+                if (!res.ok) {
+                    errores.appendChild(ui.banner('No se creó la empresa', res.error, 'danger'));
+                    return;
+                }
+                ui.toastOk('Empresa creada en la nube', 'Ya puede subir los datos de este equipo.');
+                ERP.app.refrescar();
+            });
+
+            return el('div', { class: 'stack' }, [
+                ui.banner('Falta registrar la empresa',
+                    'Esta cuenta de Supabase todavía no pertenece a ninguna empresa. Créela una sola vez: quien la crea queda como administrador de la nube.', 'info'),
+                errores,
+                el('div', { class: 'grid-form' }, [
+                    ui.campo('Razón social', campos.razonSocial, { clase: 'span-full' }),
+                    ui.campo('NIT', campos.nit)
+                ]),
+                el('div', { class: 'row row-wrap' }, [btn])
+            ]);
+        };
+
+        /* ---- Conectado y con empresa: sincronizar ---- */
+
+        const panelSincronizacion = (perfil) => {
+            const esAdmin = perfil.rol === 'administrador';
+
+            const btnDescargar = el('button', {
+                class: 'btn btn-secondary', text: '⤓ Descargar de la nube', attrs: { type: 'button' }
+            });
+            const btnSubir = el('button', {
+                class: 'btn', text: '⤒ Subir a la nube', attrs: { type: 'button' },
+                props: { disabled: !esAdmin }
+            });
+
+            btnDescargar.addEventListener('click', async () => {
+                if (!autorizado()) return;
+                const ok = await ui.confirmar({
+                    titulo: 'Descargar los datos de la nube',
+                    mensaje: 'Los datos de este navegador se reemplazan por los de la nube.',
+                    detalle: 'Se conservan los usuarios y contraseñas de este equipo. Exporte un respaldo antes si tiene cambios sin subir.',
+                    textoAceptar: 'Descargar y reemplazar',
+                    peligroso: true
+                });
+                if (!ok || !autorizado()) return;
+                const res = await nube.descargar();
+                if (!res.ok) {
+                    ui.toastError('No se descargaron los datos', res.error);
+                    return;
+                }
+                ui.toastOk('Datos descargados', `${res.resumen.empresa}: ${resumenDatos(res.resumen)}.`);
+                ERP.app.refrescar();
+            });
+
+            btnSubir.addEventListener('click', async () => {
+                if (!autorizado()) return;
+                const ok = await ui.confirmar({
+                    titulo: 'Subir los datos a la nube',
+                    mensaje: 'Los datos de la nube se reemplazan por los de este navegador.',
+                    detalle: 'Si otro usuario subió cambios después de su última sincronización, la nube rechaza la subida y le pide descargar primero.',
+                    textoAceptar: 'Subir y reemplazar',
+                    peligroso: true
+                });
+                if (!ok || !autorizado()) return;
+                const res = await nube.subir();
+                if (!res.ok) {
+                    ui.toastError('No se subieron los datos', res.error);
+                    return;
+                }
+                ui.toastOk('Datos subidos', `Revisión ${res.rev}: ${resumenDatos(res.resumen)}.`);
+                ERP.app.refrescar();
+            });
+
+            const auto = el('input', {
+                attrs: { type: 'checkbox', id: 'nube-auto' },
+                props: { checked: nube.auto(), disabled: !esAdmin }
+            });
+            auto.addEventListener('change', () => {
+                if (!autorizado()) return;
+                nube.activarAuto(auto.checked);
+                ui.toastOk(auto.checked ? 'Subida automática activada' : 'Subida automática desactivada',
+                    auto.checked
+                        ? 'Cada cambio se envía a la nube unos segundos después de guardarlo.'
+                        : 'Los cambios se envían solo cuando pulse «Subir a la nube».');
+            });
+
+            const btnSalir = el('button', {
+                class: 'btn btn-ghost', text: 'Desconectar', attrs: { type: 'button' },
+                on: {
+                    click: async () => {
+                        if (!autorizado()) return;
+                        await nube.salir();
+                        ui.toastOk('Sesión de la nube cerrada', 'Los datos de este navegador no cambiaron.');
+                        ERP.app.refrescar();
+                    }
+                }
+            });
+
+            return el('div', { class: 'stack' }, [
+                el('div', { class: 'row row-wrap' }, [
+                    ui.badge('Conectado', 'success'),
+                    el('span', { class: 'strong', text: perfil.empresa }),
+                    ui.badge(ERP.auth.etiquetaRol(perfil.rol), 'info'),
+                    el('span', { class: 'text-muted', text: nube.estado().email })
+                ]),
+                el('p', {
+                    class: 'text-muted',
+                    text: `Última sincronización: ${fechaNube(perfil.sincronizadoEn)} · revisión ${U.num(perfil.rev || 0)}.`
+                }),
+                esAdmin ? null : ui.banner('Su rol solo puede descargar',
+                    'Reemplazar los datos compartidos está reservado al administrador.', 'info'),
+                el('div', { class: 'row row-wrap' }, [
+                    auto,
+                    el('label', { text: 'Subir automáticamente los cambios de este equipo', attrs: { for: 'nube-auto' } })
+                ]),
+                el('div', { class: 'row row-wrap' }, [btnDescargar, btnSubir, btnSalir])
+            ]);
+        };
+
+        const info = nube.estado();
+        U.appendAll(cuerpo, [
+            el('p', {
+                class: 'text-muted',
+                text: 'Guarda los datos de la empresa en PostgreSQL para verlos desde cualquier equipo. Los usuarios y contraseñas de la aplicación no viajan a la nube: son propios de cada navegador.'
+            }),
+            !info.conectado ? formularioAcceso()
+                : (!info.perfil ? formularioEmpresa(db.config()) : panelSincronizacion(info.perfil))
+        ]);
+
+        return ui.card('Nube (Supabase)', cuerpo, {
+            subtitulo: 'Base de datos compartida: los mismos datos en cualquier equipo',
+            pie: el('p', {
+                class: 'text-muted',
+                text: 'Subir y descargar reemplazan el conjunto completo dentro de una sola transacción: o entra todo, o no cambia nada.'
+            })
         });
     };
 
@@ -642,6 +876,8 @@ ERP.configuracion = (() => {
 
             tarjetaPermisos(),
 
+            tarjetaNube(),
+
             ui.card('Datos y respaldo', el('div', { class: 'stack' }, [
                 el('p', {
                     class: 'text-muted',
@@ -1049,6 +1285,14 @@ ERP.app = (() => {
             montarAplicacion();
         } else {
             pantallaAcceso();
+        }
+
+        // Retoma la sesión de Supabase guardada en este navegador. No bloquea el
+        // arranque: la aplicación funciona igual sin conexión.
+        if (ERP.nube && ERP.nube.configurada()) {
+            ERP.nube.iniciar().then((res) => {
+                if (res && res.conectado && ERP.auth.usuario()) montarAplicacion();
+            });
         }
 
         if (carga.publicados === 'actualizados') {
