@@ -6,7 +6,7 @@ window.ERP = window.ERP || {};
 
 /* Versión publicada. Al cambiarla, actualizar también el ?v= de index.html
    para que el navegador no reutilice los archivos anteriores. */
-ERP.VERSION = '1.9.0';
+ERP.VERSION = '2.0.0';
 
 /* ============================================================
    Configuración del sistema (solo administrador)
@@ -32,20 +32,28 @@ ERP.configuracion = (() => {
         return false;
     };
 
-    /* ---------- Edición de un usuario del sistema ---------- */
+    /* ---------- Usuarios y accesos ---------- */
 
-    const abrirEdicionUsuario = (registro) => {
+    /* La lista vive en Supabase, así que se pide por red. Se guarda en memoria
+       para no repetir la consulta en cada repintado; las acciones la refrescan. */
+    let cacheUsuarios = null;
+
+    const refrescarUsuarios = async (pintar) => {
+        const res = await ERP.nube.usuariosEmpresa();
+        cacheUsuarios = res.ok ? res : { ok: false, error: res.error };
+        pintar();
+    };
+
+    /** Correo, nombre y rol de quien tendrá acceso. La contraseña la pone la persona. */
+    const abrirInvitacion = (pintar) => {
         if (!autorizado()) return;
-        const actual = ERP.auth.usuario();
-        const esPropio = Boolean(actual && actual.id === registro.id);
-
         const campos = {
-            usuario: ui.input({ valor: registro.usuario }),
-            nombre: ui.input({ valor: registro.nombre }),
-            rol: ui.select(Object.entries(ERP.auth.ROLES).map(([valor, r]) => ({ valor, texto: r.etiqueta })), { valor: registro.rol }),
-            clave: ui.input({ tipo: 'password', placeholder: 'Déjela vacía para no cambiarla', autocomplete: 'new-password' }),
-            confirmacion: ui.input({ tipo: 'password', placeholder: 'Repita la nueva contraseña', autocomplete: 'new-password' })
+            email: ui.input({ tipo: 'email', placeholder: 'persona@empresa.com', autocomplete: 'off' }),
+            nombre: ui.input({ placeholder: 'Nombre y apellido' }),
+            rol: ui.select(Object.entries(ERP.auth.ROLES).map(([valor, r]) => ({ valor, texto: r.etiqueta })),
+                { valor: 'vendedor' })
         };
+        const errores = el('div');
 
         const descripcionRol = el('span', { class: 'hint' });
         const actualizarDescripcion = () => {
@@ -59,85 +67,304 @@ ERP.configuracion = (() => {
         const campoRol = ui.campo('Rol', campos.rol);
         campoRol.appendChild(descripcionRol);
 
-        const mostrarClaves = el('input', { attrs: { type: 'checkbox' } });
-        mostrarClaves.addEventListener('change', () => {
-            const tipo = mostrarClaves.checked ? 'text' : 'password';
-            campos.clave.type = tipo;
-            campos.confirmacion.type = tipo;
+        const formulario = el('form', { class: 'stack' }, [
+            el('p', {
+                class: 'text-muted',
+                text: 'La persona crea su propia contraseña al registrarse con este correo. Nadie más la conoce, tampoco el administrador.'
+            }),
+            errores,
+            el('div', { class: 'grid-form' }, [
+                ui.campo('Correo electrónico', campos.email, { clase: 'span-full' }),
+                ui.campo('Nombre', campos.nombre),
+                campoRol
+            ])
+        ]);
+
+        const btnCancelar = el('button', { class: 'btn btn-secondary', text: 'Cancelar', attrs: { type: 'button' } });
+        const btnInvitar = el('button', { class: 'btn', text: 'Dar acceso', attrs: { type: 'submit' } });
+        formulario.appendChild(el('div', { class: 'row row-wrap' }, [btnInvitar]));
+        btnInvitar.style.display = 'none';
+
+        const ctrl = ui.modal({
+            titulo: 'Dar acceso a una persona',
+            subtitulo: 'Se habilita por su correo electrónico',
+            contenido: formulario,
+            acciones: [btnCancelar, el('button', {
+                class: 'btn', text: 'Dar acceso', attrs: { type: 'button' },
+                on: { click: () => formulario.requestSubmit(btnInvitar) }
+            })]
+        });
+        btnCancelar.addEventListener('click', () => ctrl.cerrar());
+
+        formulario.addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+            if (!autorizado()) return;
+            U.clear(errores);
+            const res = await ERP.nube.invitar({
+                email: campos.email.value,
+                nombre: campos.nombre.value,
+                rol: campos.rol.value
+            });
+            if (!res.ok) {
+                errores.appendChild(ui.banner('No se pudo dar el acceso', res.error, 'danger'));
+                return;
+            }
+            ctrl.cerrar();
+            const inv = res.invitacion || {};
+            if (inv.estado === 'vinculada') {
+                ui.toastOk('Acceso concedido', `${inv.email} ya tenía cuenta y entra como ${ERP.auth.etiquetaRol(campos.rol.value)}.`);
+            } else {
+                ui.toastOk('Invitación creada',
+                    `${inv.email} podrá entrar en cuanto cree su cuenta con ese correo. La invitación vence en 30 días.`);
+            }
+            await refrescarUsuarios(pintar);
         });
 
+        campos.email.focus();
+    };
+
+    /** Nombre, rol y estado de un usuario de la empresa. La contraseña no se toca desde aquí. */
+    const abrirEdicionUsuario = (registro, pintar) => {
+        if (!autorizado()) return;
+        const actual = ERP.auth.usuario();
+        const esPropio = Boolean(actual && actual.id === registro.id);
+
+        const campos = {
+            nombre: ui.input({ valor: registro.nombre }),
+            rol: ui.select(Object.entries(ERP.auth.ROLES).map(([valor, r]) => ({ valor, texto: r.etiqueta })),
+                { valor: registro.rol })
+        };
+        const activo = el('input', {
+            attrs: { type: 'checkbox', id: 'usuario-activo' },
+            props: { checked: registro.activo !== false }
+        });
         const errores = el('div');
 
         const formulario = el('form', { class: 'stack' }, [
             errores,
-            esPropio ? ui.banner('Está editando su propio usuario',
-                'Si se asigna un rol sin acceso a Configuración, saldrá de esta pantalla al guardar.', 'info') : null,
             el('div', { class: 'grid-form' }, [
-                ui.campo('Usuario', campos.usuario, { ayuda: 'Con el que se inicia sesión. Letras sin tildes, números, punto o guion.' }),
-                ui.campo('Nombre', campos.nombre),
-                campoRol
+                ui.campo('Nombre', campos.nombre, { clase: 'span-full' }),
+                ui.campo('Rol', campos.rol)
             ]),
-            el('fieldset', { class: 'stack-sm' }, [
-                el('legend', { text: 'Contraseña' }),
-                el('div', { class: 'grid-form' }, [
-                    ui.campo('Nueva contraseña', campos.clave, { ayuda: 'Mínimo 6 caracteres. Si la deja vacía se conserva la actual.' }),
-                    ui.campo('Confirmar contraseña', campos.confirmacion)
-                ]),
-                el('label', { class: 'check' }, [mostrarClaves, el('span', { text: 'Mostrar contraseñas' })])
-            ])
+            el('div', { class: 'row row-wrap' }, [
+                activo,
+                el('label', { text: 'Puede entrar al sistema', attrs: { for: 'usuario-activo' } })
+            ]),
+            el('p', {
+                class: 'text-muted',
+                text: `Correo: ${registro.email || '—'} · usuario: ${registro.usuario}. La contraseña la administra cada persona desde «¿Olvidó su contraseña?» en la pantalla de acceso.`
+            })
         ]);
 
-        const btnGuardar = el('button', { class: 'btn', text: 'Guardar cambios', attrs: { type: 'button' } });
         const btnCancelar = el('button', { class: 'btn btn-secondary', text: 'Cancelar', attrs: { type: 'button' } });
+        const btnGuardar = el('button', { class: 'btn', text: 'Guardar', attrs: { type: 'button' } });
 
         const ctrl = ui.modal({
-            titulo: 'Editar usuario',
-            subtitulo: `${registro.nombre} · ${registro.usuario}`,
+            titulo: `Usuario ${registro.usuario}`,
+            subtitulo: esPropio ? 'Es su propio usuario' : registro.email,
             contenido: formulario,
             acciones: [btnCancelar, btnGuardar]
         });
-
         btnCancelar.addEventListener('click', () => ctrl.cerrar());
 
-        const enviar = (event) => {
-            if (event) event.preventDefault();
+        const guardar = async () => {
+            if (!autorizado()) return;
             U.clear(errores);
-
-            if (!autorizado()) {
-                ctrl.cerrar();
-                return;
-            }
-
-            if (campos.clave.value !== campos.confirmacion.value) {
-                errores.appendChild(ui.banner('Las contraseñas no coinciden', 'Escriba la misma contraseña en los dos campos.', 'danger'));
-                return;
-            }
-
-            const res = db.actualizarUsuario(registro.id, {
-                usuario: campos.usuario.value,
+            const res = await ERP.nube.actualizarPerfil({
+                id: registro.id,
                 nombre: campos.nombre.value,
                 rol: campos.rol.value,
-                clave: campos.clave.value
+                activo: activo.checked
             });
-
             if (!res.ok) {
                 errores.appendChild(ui.banner('No se pudo guardar', res.error, 'danger'));
                 return;
             }
-
             ctrl.cerrar();
-            ui.toastOk('Usuario actualizado',
-                `${res.usuario.nombre} (${res.usuario.usuario})${res.claveCambiada ? ' · contraseña cambiada' : ''}.`);
-
-            if (esPropio) {
-                // Si el nuevo rol ya no incluye Configuración, el montaje lo lleva a un módulo permitido.
-                ERP.auth.sincronizarSesion();
-                ERP.app.refrescar();
-            }
+            ui.toastOk('Usuario actualizado', `${campos.nombre.value} · ${ERP.auth.etiquetaRol(campos.rol.value)}.`);
+            await refrescarUsuarios(pintar);
+            // Si se cambió a sí mismo, el montaje aplica el rol nuevo.
+            if (esPropio) ERP.app.refrescar();
         };
 
-        formulario.addEventListener('submit', enviar);
-        btnGuardar.addEventListener('click', enviar);
+        btnGuardar.addEventListener('click', guardar);
+        formulario.addEventListener('submit', (evento) => { evento.preventDefault(); guardar(); });
+    };
+
+    /** Cambiar la propia contraseña: viaja a Supabase y no se guarda aquí. */
+    const abrirCambioClave = () => {
+        const campos = {
+            nueva: ui.input({ tipo: 'password', autocomplete: 'new-password', placeholder: 'Mínimo 8 caracteres' }),
+            confirmacion: ui.input({ tipo: 'password', autocomplete: 'new-password', placeholder: 'Repita la contraseña' })
+        };
+        const errores = el('div');
+
+        const formulario = el('form', { class: 'stack' }, [
+            errores,
+            el('div', { class: 'grid-form' }, [
+                ui.campo('Contraseña nueva', campos.nueva, { clase: 'span-full' }),
+                ui.campo('Repita la contraseña', campos.confirmacion, { clase: 'span-full' })
+            ])
+        ]);
+
+        const btnCancelar = el('button', { class: 'btn btn-secondary', text: 'Cancelar', attrs: { type: 'button' } });
+        const btnGuardar = el('button', { class: 'btn', text: 'Cambiar contraseña', attrs: { type: 'button' } });
+
+        const ctrl = ui.modal({
+            titulo: 'Cambiar mi contraseña',
+            ancho: 'estrecho',
+            contenido: formulario,
+            acciones: [btnCancelar, btnGuardar]
+        });
+        btnCancelar.addEventListener('click', () => ctrl.cerrar());
+
+        const guardar = async () => {
+            U.clear(errores);
+            if (campos.nueva.value !== campos.confirmacion.value) {
+                errores.appendChild(ui.banner('No coinciden', 'Las dos contraseñas deben ser iguales.', 'danger'));
+                return;
+            }
+            const res = await ERP.auth.cambiarClave(campos.nueva.value);
+            if (!res.ok) {
+                errores.appendChild(ui.banner('No se pudo cambiar', res.error, 'danger'));
+                return;
+            }
+            ctrl.cerrar();
+            ui.toastOk('Contraseña cambiada', 'Úsela la próxima vez que entre.');
+        };
+
+        btnGuardar.addEventListener('click', guardar);
+        formulario.addEventListener('submit', (evento) => { evento.preventDefault(); guardar(); });
+        campos.nueva.focus();
+    };
+
+    const tarjetaUsuarios = () => {
+        const cuerpo = el('div', { class: 'stack' });
+        const nube = ERP.nube;
+
+        const pintar = () => {
+            U.clear(cuerpo);
+
+            const btnInvitar = el('button', {
+                class: 'btn', text: 'Dar acceso a una persona', attrs: { type: 'button' },
+                on: { click: () => abrirInvitacion(pintar) }
+            });
+            const btnClave = el('button', {
+                class: 'btn btn-secondary', text: 'Cambiar mi contraseña', attrs: { type: 'button' },
+                on: { click: abrirCambioClave }
+            });
+            const btnRecargar = el('button', {
+                class: 'btn btn-ghost', text: 'Actualizar lista', attrs: { type: 'button' },
+                on: { click: () => refrescarUsuarios(pintar) }
+            });
+
+            U.appendAll(cuerpo, [
+                el('p', {
+                    class: 'text-muted',
+                    text: 'Cada persona entra con su correo y su contraseña. Las contraseñas las guarda Supabase cifradas y no se pueden ver desde aquí ni desde ningún navegador.'
+                })
+            ]);
+
+            if (!cacheUsuarios) {
+                cuerpo.appendChild(ui.estadoCargando('Consultando los usuarios de la empresa…'));
+                refrescarUsuarios(pintar);
+                return;
+            }
+            if (!cacheUsuarios.ok) {
+                U.appendAll(cuerpo, [
+                    ui.banner('No se pudo consultar la lista', cacheUsuarios.error, 'warning'),
+                    el('div', { class: 'row row-wrap' }, [btnRecargar])
+                ]);
+                return;
+            }
+
+            const actual = ERP.auth.usuario();
+            const tabla = el('div', { class: 'table-wrap' }, [
+                el('table', { class: 'data' }, [
+                    el('thead', {}, [el('tr', {}, [
+                        el('th', { text: 'Usuario', attrs: { scope: 'col' } }),
+                        el('th', { text: 'Nombre', attrs: { scope: 'col' } }),
+                        el('th', { text: 'Correo', attrs: { scope: 'col' } }),
+                        el('th', { text: 'Rol', attrs: { scope: 'col' } }),
+                        el('th', { class: 'num', text: 'Módulos', attrs: { scope: 'col' } }),
+                        el('th', { attrs: { scope: 'col' } }, [el('span', { class: 'visually-hidden', text: 'Acciones' })])
+                    ])]),
+                    el('tbody', {}, cacheUsuarios.usuarios.map((u) => el('tr', {}, [
+                        el('td', {}, [el('div', { class: 'row' }, [
+                            el('span', { class: 'strong', text: u.usuario }),
+                            actual && actual.id === u.id ? ui.badge('Usted', 'neutral') : null,
+                            u.activo === false ? ui.badge('Sin acceso', 'danger') : null
+                        ])]),
+                        el('td', { text: u.nombre }),
+                        el('td', { text: u.email || '—' }),
+                        el('td', {}, [ui.badge(ERP.auth.etiquetaRol(u.rol), 'info')]),
+                        el('td', { class: 'num', text: U.num(ERP.auth.modulosDeRol(u.rol).length) }),
+                        el('td', { class: 'text-right' }, [el('button', {
+                            class: 'btn btn-ghost btn-sm', text: 'Editar',
+                            attrs: { type: 'button', 'aria-label': `Editar el usuario ${u.usuario}` },
+                            on: { click: () => abrirEdicionUsuario(u, pintar) }
+                        })])
+                    ])))
+                ])
+            ]);
+            cuerpo.appendChild(tabla);
+
+            if (cacheUsuarios.invitaciones.length) {
+                cuerpo.appendChild(el('h3', { text: 'Invitaciones pendientes' }));
+                cuerpo.appendChild(el('div', { class: 'table-wrap' }, [
+                    el('table', { class: 'data' }, [
+                        el('thead', {}, [el('tr', {}, [
+                            el('th', { text: 'Correo', attrs: { scope: 'col' } }),
+                            el('th', { text: 'Nombre', attrs: { scope: 'col' } }),
+                            el('th', { text: 'Rol', attrs: { scope: 'col' } }),
+                            el('th', { text: 'Vence', attrs: { scope: 'col' } }),
+                            el('th', { attrs: { scope: 'col' } }, [el('span', { class: 'visually-hidden', text: 'Acciones' })])
+                        ])]),
+                        el('tbody', {}, cacheUsuarios.invitaciones.map((i) => el('tr', {}, [
+                            el('td', { text: i.email }),
+                            el('td', { text: i.nombre }),
+                            el('td', {}, [ui.badge(ERP.auth.etiquetaRol(i.rol), 'info')]),
+                            el('td', { text: new Date(i.expiraEn).toLocaleDateString('es-CO') }),
+                            el('td', { class: 'text-right' }, [el('button', {
+                                class: 'btn btn-ghost btn-sm', text: 'Revocar',
+                                attrs: { type: 'button', 'aria-label': `Revocar la invitación de ${i.email}` },
+                                on: {
+                                    click: async () => {
+                                        if (!autorizado()) return;
+                                        const ok = await ui.confirmar({
+                                            titulo: 'Revocar la invitación',
+                                            mensaje: `${i.email} ya no podrá entrar al registrarse.`,
+                                            textoAceptar: 'Revocar',
+                                            peligroso: true
+                                        });
+                                        if (!ok || !autorizado()) return;
+                                        const res = await nube.revocarInvitacion(i.id);
+                                        if (!res.ok) {
+                                            ui.toastError('No se revocó', res.error);
+                                            return;
+                                        }
+                                        ui.toastOk('Invitación revocada', i.email);
+                                        await refrescarUsuarios(pintar);
+                                    }
+                                }
+                            })])
+                        ])))
+                    ])
+                ]));
+            }
+
+            cuerpo.appendChild(el('div', { class: 'row row-wrap' }, [btnInvitar, btnClave, btnRecargar]));
+        };
+
+        pintar();
+
+        return ui.card('Usuarios y accesos', cuerpo, {
+            subtitulo: 'Quién entra al sistema, con qué correo y con qué rol',
+            pie: el('p', {
+                class: 'text-muted',
+                text: 'Las credenciales viven en Supabase Auth (auth.users), cifradas con bcrypt. La aplicación guarda en public.perfiles el correo, el nombre y el rol; nunca la contraseña.'
+            })
+        });
     };
 
     /* ---------- Permisos por rol ---------- */
@@ -254,94 +481,6 @@ ERP.configuracion = (() => {
             `${U.num(r.clientes !== undefined ? r.clientes : r.terceros || 0)} ${r.clientes !== undefined ? 'clientes' : 'terceros'}`
         ].join(', ');
 
-        /* ---- Sin conexión: se pide la cuenta de Supabase ---- */
-
-        const formularioAcceso = () => {
-            const campos = {
-                email: ui.input({ tipo: 'email', placeholder: 'correo@empresa.com', autocomplete: 'username' }),
-                clave: ui.input({ tipo: 'password', placeholder: 'Contraseña de Supabase', autocomplete: 'current-password' })
-            };
-            const errores = el('div');
-            const btn = el('button', { class: 'btn', text: 'Conectar', attrs: { type: 'submit' } });
-
-            const formulario = el('form', { class: 'stack' }, [
-                el('p', {
-                    class: 'text-muted',
-                    text: 'Use la cuenta de Supabase del proyecto. No es el usuario con el que entra a la aplicación: esa contraseña nunca sale de este navegador.'
-                }),
-                errores,
-                el('div', { class: 'grid-form' }, [
-                    ui.campo('Correo de Supabase', campos.email),
-                    ui.campo('Contraseña', campos.clave)
-                ]),
-                el('div', { class: 'row row-wrap' }, [btn])
-            ]);
-
-            formulario.addEventListener('submit', async (evento) => {
-                evento.preventDefault();
-                if (!autorizado()) return;
-                U.clear(errores);
-                btn.disabled = true;
-                btn.textContent = 'Conectando…';
-                const res = await nube.entrar(campos.email.value, campos.clave.value);
-                campos.clave.value = '';
-                btn.disabled = false;
-                btn.textContent = 'Conectar';
-                if (!res.ok) {
-                    errores.appendChild(ui.banner('No se pudo conectar', res.error, 'danger'));
-                    return;
-                }
-                ui.toastOk('Conectado a la nube', res.perfil
-                    ? `${res.perfil.empresa} · ${ERP.auth.etiquetaRol(res.perfil.rol)}`
-                    : 'Falta registrar la empresa en la nube.');
-                ERP.app.refrescar();
-            });
-
-            return formulario;
-        };
-
-        /* ---- Conectado sin empresa: se crea la primera ---- */
-
-        const formularioEmpresa = (cfg) => {
-            const campos = {
-                razonSocial: ui.input({ valor: cfg.empresa }),
-                nit: ui.input({ valor: cfg.nit })
-            };
-            const errores = el('div');
-            const btn = el('button', { class: 'btn', text: 'Crear la empresa en la nube', attrs: { type: 'button' } });
-
-            btn.addEventListener('click', async () => {
-                if (!autorizado()) return;
-                U.clear(errores);
-                btn.disabled = true;
-                const actual = ERP.auth.usuario();
-                const res = await nube.crearEmpresa({
-                    razonSocial: campos.razonSocial.value,
-                    nit: campos.nit.value,
-                    usuario: actual ? actual.usuario : 'admin',
-                    nombre: actual ? actual.nombre : 'Administrador'
-                });
-                btn.disabled = false;
-                if (!res.ok) {
-                    errores.appendChild(ui.banner('No se creó la empresa', res.error, 'danger'));
-                    return;
-                }
-                ui.toastOk('Empresa creada en la nube', 'Ya puede subir los datos de este equipo.');
-                ERP.app.refrescar();
-            });
-
-            return el('div', { class: 'stack' }, [
-                ui.banner('Falta registrar la empresa',
-                    'Esta cuenta de Supabase todavía no pertenece a ninguna empresa. Créela una sola vez: quien la crea queda como administrador de la nube.', 'info'),
-                errores,
-                el('div', { class: 'grid-form' }, [
-                    ui.campo('Razón social', campos.razonSocial, { clase: 'span-full' }),
-                    ui.campo('NIT', campos.nit)
-                ]),
-                el('div', { class: 'row row-wrap' }, [btn])
-            ]);
-        };
-
         /* ---- Conectado y con empresa: sincronizar ---- */
 
         const panelSincronizacion = (perfil) => {
@@ -360,7 +499,7 @@ ERP.configuracion = (() => {
                 const ok = await ui.confirmar({
                     titulo: 'Descargar los datos de la nube',
                     mensaje: 'Los datos de este navegador se reemplazan por los de la nube.',
-                    detalle: 'Se conservan los usuarios y contraseñas de este equipo. Exporte un respaldo antes si tiene cambios sin subir.',
+                    detalle: 'No afecta a los usuarios ni a las contraseñas. Exporte un respaldo antes si tiene cambios sin subir.',
                     textoAceptar: 'Descargar y reemplazar',
                     peligroso: true
                 });
@@ -443,10 +582,18 @@ ERP.configuracion = (() => {
         U.appendAll(cuerpo, [
             el('p', {
                 class: 'text-muted',
-                text: 'Guarda los datos de la empresa en PostgreSQL para verlos desde cualquier equipo. Los usuarios y contraseñas de la aplicación no viajan a la nube: son propios de cada navegador.'
+                text: 'Guarda los datos de la empresa en PostgreSQL para verlos desde cualquier equipo. Los usuarios se gestionan aparte, en «Usuarios y accesos».'
             }),
-            !info.conectado ? formularioAcceso()
-                : (!info.perfil ? formularioEmpresa(db.config()) : panelSincronizacion(info.perfil))
+            // Estando dentro siempre hay sesión; solo falta si caducó mientras trabajaba.
+            info.conectado && info.perfil ? panelSincronizacion(info.perfil)
+                : el('div', { class: 'stack' }, [
+                    ui.banner('La sesión con la nube terminó',
+                        'Guarde lo que esté haciendo y vuelva a entrar para sincronizar.', 'warning'),
+                    el('div', { class: 'row row-wrap' }, [el('button', {
+                        class: 'btn', text: 'Volver a entrar', attrs: { type: 'button' },
+                        on: { click: async () => { await ERP.auth.cerrarSesion(); ERP.app.refrescar(); } }
+                    })])
+                ])
         ]);
 
         return ui.card('Nube (Supabase)', cuerpo, {
@@ -536,9 +683,6 @@ ERP.configuracion = (() => {
                 return;
             }
             const r = revision.resumen;
-            const actual = ERP.auth.usuario();
-            const usuarioSigue = Boolean(actual)
-                && revision.datos.usuarios.some((u) => u.id === actual.id && u.activo !== false);
 
             const entiendo = el('input', { attrs: { type: 'checkbox' } });
             const errores = el('div');
@@ -561,13 +705,9 @@ ERP.configuracion = (() => {
                         fila('Ventas', U.num(r.ventas)),
                         fila('Compras', U.num(r.compras)),
                         fila('Gastos', U.num(r.gastos)),
-                        fila('Empleados', U.num(r.empleados)),
-                        fila('Usuarios', r.usuarios.join(', '))
+                        fila('Empleados', U.num(r.empleados))
                     ])])
                 ]),
-                usuarioSigue ? null : ui.banner('Deberá ingresar de nuevo',
-                    'Su usuario actual no está en el respaldo: al importar se cerrará la sesión y deberá entrar con un usuario del respaldo.',
-                    'info'),
                 el('div', { class: 'row row-wrap' }, [
                     el('button', {
                         class: 'btn btn-secondary', text: '⤓ Exportar los datos actuales antes', attrs: { type: 'button' },
@@ -661,7 +801,7 @@ ERP.configuracion = (() => {
                     'danger'),
                 el('p', {
                     class: 'text-muted',
-                    text: 'Se conservan los usuarios con sus contraseñas, los permisos por rol y los parámetros de IVA y nómina. Los consecutivos de facturas y compras vuelven a empezar en 1.'
+                    text: 'Se conservan los usuarios del sistema (viven en Supabase), los permisos por rol y los parámetros de IVA y nómina. Los consecutivos de facturas y compras vuelven a empezar en 1.'
                 }),
                 el('div', { class: 'row row-wrap' }, [
                     el('button', {
@@ -801,8 +941,6 @@ ERP.configuracion = (() => {
             }
         });
 
-        const usuarios = db.all('usuarios');
-
         U.appendAll(contenedor, [
             el('div', { class: 'view-head' }, [
                 el('div', { class: 'grow' }, [
@@ -838,41 +976,7 @@ ERP.configuracion = (() => {
                     'warning')
             ])),
 
-            ui.card('Usuarios del sistema', el('div', { class: 'table-wrap' }, [
-                el('table', { class: 'data' }, [
-                    el('thead', {}, [el('tr', {}, [
-                        el('th', { text: 'Usuario', attrs: { scope: 'col' } }),
-                        el('th', { text: 'Nombre', attrs: { scope: 'col' } }),
-                        el('th', { text: 'Rol', attrs: { scope: 'col' } }),
-                        el('th', { class: 'num', text: 'Módulos con acceso', attrs: { scope: 'col' } }),
-                        el('th', { attrs: { scope: 'col' } }, [el('span', { class: 'visually-hidden', text: 'Acciones' })])
-                    ])]),
-                    el('tbody', {}, usuarios.map((u) => {
-                        const actual = ERP.auth.usuario();
-                        return el('tr', {}, [
-                            el('td', {}, [el('div', { class: 'row' }, [
-                                el('span', { class: 'strong', text: u.usuario }),
-                                actual && actual.id === u.id ? ui.badge('Usted', 'neutral') : null
-                            ])]),
-                            el('td', { text: u.nombre }),
-                            el('td', {}, [ui.badge(ERP.auth.etiquetaRol(u.rol), 'info')]),
-                            el('td', { class: 'num', text: U.num(ERP.auth.modulosDeRol(u.rol).length) }),
-                            el('td', { class: 'text-right' }, [el('button', {
-                                class: 'btn btn-ghost btn-sm', text: 'Editar',
-                                attrs: { type: 'button', 'aria-label': `Editar el usuario ${u.usuario}` },
-                                on: { click: () => abrirEdicionUsuario(u) }
-                            })])
-                        ]);
-                    }))
-                ])
-            ]), {
-                subtitulo: 'Usuario, nombre, rol y contraseña de quienes acceden al sistema',
-                sinRelleno: true,
-                pie: el('p', {
-                    class: 'text-muted',
-                    text: 'La autenticación local separa responsabilidades dentro de la aplicación, pero no es un control de seguridad. Al conectar Supabase debe delegarse en Supabase Auth con Row Level Security.'
-                })
-            }),
+            tarjetaUsuarios(),
 
             tarjetaPermisos(),
 
@@ -962,40 +1066,201 @@ ERP.app = (() => {
 
     /* ---------- Pantalla de acceso ---------- */
 
-    const pantallaAcceso = () => {
+    /**
+     * Quien entra lo hace con su correo y su contraseña, que verifica Supabase
+     * Auth. La contraseña no se guarda en este navegador en ningún momento:
+     * solo queda el testigo de sesión que devuelve el servidor.
+     *
+     * modo: entrar | registrar | recuperar | empresa
+     *   empresa aparece cuando la cuenta es válida pero todavía no pertenece a
+     *   ninguna empresa: se crea la propia o se espera a que un administrador
+     *   dé acceso a ese correo.
+     */
+    const pantallaAcceso = (modo = 'entrar', aviso = null) => {
         U.clear(raiz);
 
-        const usuario = ui.input({ autocomplete: 'username' });
-        const clave = ui.input({ tipo: 'password', placeholder: '••••••••', autocomplete: 'current-password' });
         const errores = el('div');
+        if (aviso) errores.appendChild(aviso);
 
-        const btnEntrar = el('button', { class: 'btn', text: 'Ingresar', attrs: { type: 'submit' }, style: { width: '100%' } });
-
-        const formulario = el('form', { class: 'stack' }, [
-            errores,
-            ui.campo('Usuario', usuario),
-            ui.campo('Contraseña', clave),
-            btnEntrar
-        ]);
-
-        formulario.addEventListener('submit', (event) => {
-            event.preventDefault();
-            U.clear(errores);
-
-            const res = ERP.auth.iniciarSesion(usuario.value, clave.value);
-            if (!res.ok) {
-                errores.appendChild(ui.banner('No fue posible ingresar', res.error, 'danger'));
-                clave.value = '';
-                clave.focus();
-                return;
-            }
-            estado.vista = null;
-            montarAplicacion();
-            ui.toastOk(`Bienvenida, ${res.usuario.nombre}`, ERP.auth.etiquetaRol(res.usuario.rol));
+        const enlace = (texto, destino) => el('button', {
+            class: 'btn btn-ghost btn-sm', text: texto, attrs: { type: 'button' },
+            on: { click: () => pantallaAcceso(destino) }
         });
 
-        // La pantalla de acceso no muestra usuarios ni contraseñas: la app es pública
-        // y quien administra el sistema entrega las credenciales.
+        const ocupar = (boton, texto) => {
+            boton.disabled = true;
+            boton.dataset.previo = boton.textContent;
+            boton.textContent = texto;
+        };
+        const liberar = (boton) => {
+            boton.disabled = false;
+            if (boton.dataset.previo) boton.textContent = boton.dataset.previo;
+        };
+
+        let formulario = null;
+        let primerCampo = null;
+        let pie = null;
+
+        if (modo === 'registrar') {
+            const campos = {
+                nombre: ui.input({ autocomplete: 'name', placeholder: 'Nombre y apellido' }),
+                email: ui.input({ tipo: 'email', autocomplete: 'email', placeholder: 'correo@empresa.com' }),
+                clave: ui.input({ tipo: 'password', autocomplete: 'new-password', placeholder: 'Mínimo 8 caracteres' })
+            };
+            const btn = el('button', { class: 'btn', text: 'Crear cuenta', attrs: { type: 'submit' }, style: { width: '100%' } });
+
+            formulario = el('form', { class: 'stack' }, [
+                errores,
+                ui.campo('Nombre', campos.nombre),
+                ui.campo('Correo electrónico', campos.email),
+                ui.campo('Contraseña', campos.clave, { ayuda: 'Se guarda cifrada en Supabase. No queda en este navegador.' }),
+                btn,
+                el('div', { class: 'row row-wrap' }, [enlace('Ya tengo cuenta', 'entrar')])
+            ]);
+
+            formulario.addEventListener('submit', async (evento) => {
+                evento.preventDefault();
+                U.clear(errores);
+                ocupar(btn, 'Creando la cuenta…');
+                const res = await ERP.auth.registrar({
+                    nombre: campos.nombre.value, email: campos.email.value, clave: campos.clave.value
+                });
+                campos.clave.value = '';
+                liberar(btn);
+                if (!res.ok) {
+                    errores.appendChild(ui.banner('No se pudo crear la cuenta', res.error, 'danger'));
+                    return;
+                }
+                if (res.confirmar) {
+                    pantallaAcceso('entrar', ui.banner('Revise su correo',
+                        `Enviamos un enlace a ${res.email} para confirmar la cuenta. Ábralo y vuelva a entrar aquí.`, 'info'));
+                    return;
+                }
+                if (res.sinEmpresa) {
+                    pantallaAcceso('empresa');
+                    return;
+                }
+                entrarAlSistema(res.usuario);
+            });
+            primerCampo = campos.nombre;
+
+        } else if (modo === 'recuperar') {
+            const email = ui.input({ tipo: 'email', autocomplete: 'email', placeholder: 'correo@empresa.com' });
+            const btn = el('button', { class: 'btn', text: 'Enviar enlace', attrs: { type: 'submit' }, style: { width: '100%' } });
+
+            formulario = el('form', { class: 'stack' }, [
+                errores,
+                el('p', { class: 'text-muted', text: 'Le llegará un correo con un enlace para poner una contraseña nueva.' }),
+                ui.campo('Correo electrónico', email),
+                btn,
+                el('div', { class: 'row row-wrap' }, [enlace('Volver', 'entrar')])
+            ]);
+
+            formulario.addEventListener('submit', async (evento) => {
+                evento.preventDefault();
+                U.clear(errores);
+                ocupar(btn, 'Enviando…');
+                const res = await ERP.auth.recuperar(email.value);
+                liberar(btn);
+                if (!res.ok) {
+                    errores.appendChild(ui.banner('No se pudo enviar', res.error, 'danger'));
+                    return;
+                }
+                pantallaAcceso('entrar', ui.banner('Correo enviado',
+                    'Si ese correo tiene cuenta, recibirá el enlace en unos minutos. Revise también el correo no deseado.', 'info'));
+            });
+            primerCampo = email;
+
+        } else if (modo === 'empresa') {
+            const campos = {
+                razonSocial: ui.input({ placeholder: 'Razón social de su empresa' }),
+                nit: ui.input({ placeholder: 'Ej. 900.123.456-7' })
+            };
+            const btn = el('button', { class: 'btn', text: 'Crear la empresa', attrs: { type: 'submit' }, style: { width: '100%' } });
+
+            formulario = el('form', { class: 'stack' }, [
+                ui.banner('Su cuenta todavía no pertenece a ninguna empresa',
+                    'Cree la suya y quedará como administrador. Si alguien le dio acceso a una empresa existente, pídale que revise el correo con el que lo habilitó.', 'info'),
+                errores,
+                ui.campo('Razón social', campos.razonSocial),
+                ui.campo('NIT', campos.nit, { ayuda: 'Opcional. Aparece en las facturas y reportes.' }),
+                btn,
+                el('div', { class: 'row row-wrap' }, [el('button', {
+                    class: 'btn btn-ghost btn-sm', text: 'Salir', attrs: { type: 'button' },
+                    on: {
+                        click: async () => {
+                            await ERP.auth.cerrarSesion();
+                            pantallaAcceso('entrar');
+                        }
+                    }
+                })])
+            ]);
+
+            formulario.addEventListener('submit', async (evento) => {
+                evento.preventDefault();
+                U.clear(errores);
+                ocupar(btn, 'Creando…');
+                const res = await ERP.nube.crearEmpresa({
+                    razonSocial: campos.razonSocial.value,
+                    nit: campos.nit.value,
+                    usuario: 'admin',
+                    nombre: (ERP.nube.estado().perfil || {}).nombre || 'Administrador'
+                });
+                liberar(btn);
+                if (!res.ok) {
+                    errores.appendChild(ui.banner('No se creó la empresa', res.error, 'danger'));
+                    return;
+                }
+                const usuario = ERP.auth.restaurarSesion();
+                if (!usuario) {
+                    errores.appendChild(ui.banner('Algo quedó a medias', 'La empresa se creó pero no fue posible abrir la sesión. Vuelva a entrar.', 'warning'));
+                    return;
+                }
+                entrarAlSistema(usuario);
+            });
+            primerCampo = campos.razonSocial;
+
+        } else {
+            const email = ui.input({ tipo: 'email', autocomplete: 'username', placeholder: 'correo@empresa.com' });
+            const clave = ui.input({ tipo: 'password', placeholder: '••••••••', autocomplete: 'current-password' });
+            const btn = el('button', { class: 'btn', text: 'Ingresar', attrs: { type: 'submit' }, style: { width: '100%' } });
+
+            formulario = el('form', { class: 'stack' }, [
+                errores,
+                ui.campo('Correo electrónico', email),
+                ui.campo('Contraseña', clave),
+                btn,
+                el('div', { class: 'row row-wrap' }, [
+                    enlace('Crear cuenta', 'registrar'),
+                    enlace('¿Olvidó su contraseña?', 'recuperar')
+                ])
+            ]);
+
+            formulario.addEventListener('submit', async (evento) => {
+                evento.preventDefault();
+                U.clear(errores);
+                ocupar(btn, 'Verificando…');
+                const res = await ERP.auth.iniciarSesion(email.value, clave.value);
+                clave.value = '';
+                liberar(btn);
+                if (!res.ok) {
+                    errores.appendChild(ui.banner('No fue posible ingresar', res.error, 'danger'));
+                    clave.focus();
+                    return;
+                }
+                if (res.sinEmpresa) {
+                    pantallaAcceso('empresa');
+                    return;
+                }
+                entrarAlSistema(res.usuario);
+            });
+            primerCampo = email;
+            pie = el('p', {
+                class: 'hint',
+                text: 'Su contraseña se verifica en Supabase y no se guarda en este navegador.'
+            });
+        }
+
         raiz.appendChild(el('div', { class: 'login-screen' }, [
             el('main', { class: 'login-card' }, [
                 el('div', { class: 'login-brand' }, [
@@ -1006,11 +1271,42 @@ ERP.app = (() => {
                         el('p', { class: 'hint', text: `Versión ${ERP.VERSION}` })
                     ])
                 ]),
-                formulario
+                formulario,
+                pie
             ])
         ]));
 
-        usuario.focus();
+        if (primerCampo) primerCampo.focus();
+    };
+
+    /**
+     * Entra al sistema y deja los datos de este navegador alineados con la
+     * empresa de quien entra: si eran de otra empresa, se traen los suyos.
+     */
+    const entrarAlSistema = async (usuario) => {
+        estado.vista = null;
+        montarAplicacion();
+        ui.toastOk(`Bienvenido, ${usuario.nombre}`,
+            `${ERP.auth.etiquetaRol(usuario.rol)}${usuario.empresa ? ` · ${usuario.empresa}` : ''}`);
+
+        const meta = ERP.db.estadoDatos().meta;
+        const propios = meta.origen === 'local' || meta.editado;
+        const otraEmpresa = Boolean(meta.empresaNube) && meta.empresaNube !== usuario.empresaId;
+
+        if (otraEmpresa || (!meta.empresaNube && !propios)) {
+            const res = await ERP.nube.descargar();
+            if (res.ok) {
+                ui.toastOk('Datos de su empresa', `${res.resumen.empresa}: ${U.num(res.resumen.ventas)} ventas.`);
+                montarAplicacion();
+            } else if (otraEmpresa) {
+                ui.toastWarn('Los datos visibles son de otra empresa',
+                    `No se pudieron traer los de ${usuario.empresa}: ${res.error}`);
+            }
+        } else if (!meta.empresaNube) {
+            ui.toastInfo('Estos datos aún no están en la nube', ERP.auth.puede('configuracion')
+                ? 'Súbalos desde Configuración → Nube para verlos en cualquier equipo.'
+                : 'Pídale al administrador que los sincronice.');
+        }
     };
 
     /* ---------- Layout ---------- */
@@ -1115,7 +1411,7 @@ ERP.app = (() => {
                         textoAceptar: 'Cerrar sesión'
                     });
                     if (ok) {
-                        ERP.auth.cerrarSesion();
+                        await ERP.auth.cerrarSesion();
                         estado.vista = null;
                         pantallaAcceso();
                     }
@@ -1281,17 +1577,26 @@ ERP.app = (() => {
             }
         }, 200));
 
+        // La sesión guardada abre la aplicación sin esperar a la red; enseguida
+        // se revalida contra el servidor. Si allí el usuario ya no existe, fue
+        // desactivado o la sesión caducó, se vuelve al acceso.
         if (ERP.auth.restaurarSesion()) {
             montarAplicacion();
         } else {
             pantallaAcceso();
         }
 
-        // Retoma la sesión de Supabase guardada en este navegador. No bloquea el
-        // arranque: la aplicación funciona igual sin conexión.
         if (ERP.nube && ERP.nube.configurada()) {
             ERP.nube.iniciar().then((res) => {
-                if (res && res.conectado && ERP.auth.usuario()) montarAplicacion();
+                if (!res || !res.revalidado) return;
+                const antes = Boolean(ERP.auth.usuario());
+                const ahora = Boolean(ERP.auth.sincronizarSesion());
+                if (antes && !ahora) {
+                    pantallaAcceso('entrar', ui.banner('Su sesión terminó',
+                        'El administrador cambió su acceso o la sesión caducó. Ingrese de nuevo.', 'warning'));
+                } else if (ahora) {
+                    montarAplicacion();
+                }
             });
         }
 

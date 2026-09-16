@@ -1,16 +1,21 @@
 /* ============================================================
-   auth.js — Sesión local, roles y permisos por módulo
-   La autenticación es local y sirve para separar responsabilidades
-   dentro de la aplicación. NO es un control de seguridad real:
-   cuando el sistema se conecte a Supabase debe delegarse en
-   Supabase Auth con Row Level Security (Agents.md, sección 14).
+   auth.js — Identidad, roles y permisos por módulo
+
+   Quién entra lo decide Supabase Auth: el correo y la contraseña se
+   verifican en el servidor, que guarda la contraseña cifrada con bcrypt
+   en auth.users. Este navegador nunca guarda contraseñas, ni en claro ni
+   cifradas; solo el testigo de sesión, que caduca y se puede revocar.
+
+   Qué ve cada quien lo decide el rol de su perfil (public.perfiles) junto
+   con los permisos por rol que el administrador guarda en Configuración.
+   La lista de módulos se recalcula en cada montaje: quitar un permiso o
+   desactivar a alguien surte efecto sin volver a entrar.
    ============================================================ */
 
 window.ERP = window.ERP || {};
 
 ERP.auth = (() => {
     const U = ERP.util;
-    const SESION_KEY = 'erp_finanzas_sesion';
 
     let usuarioActual = null;
 
@@ -93,87 +98,95 @@ ERP.auth = (() => {
 
     const etiquetaRol = (rol) => (ROLES[rol] ? ROLES[rol].etiqueta : rol);
 
-    const iniciarSesion = (nombreUsuario, clave) => {
-        const entrada = String(nombreUsuario || '').trim().toLowerCase();
-        if (!entrada || !clave) {
-            return { ok: false, error: 'Escriba el usuario y la contraseña.' };
-        }
+    /* ---------- Identidad ---------- */
 
-        const encontrado = ERP.db.all('usuarios').find(
-            (u) => u.usuario.toLowerCase() === entrada
-        );
-
-        // Mensaje genérico: no se revela si el usuario existe.
-        if (!encontrado || encontrado.clave !== ERP.db.hashClave(clave)) {
-            return { ok: false, error: 'Usuario o contraseña incorrectos.' };
-        }
-        if (encontrado.activo === false) {
-            return { ok: false, error: 'El usuario está inactivo. Contacte al administrador.' };
-        }
-
-        usuarioActual = {
-            id: encontrado.id,
-            usuario: encontrado.usuario,
-            nombre: encontrado.nombre,
-            rol: encontrado.rol
+    /** Traduce el perfil de la nube a la sesión que usa el resto de la aplicación. */
+    const desdePerfil = (perfil) => {
+        if (!perfil || !perfil.rol || perfil.activo === false) return null;
+        return {
+            id: perfil.id,
+            usuario: perfil.usuario,
+            nombre: perfil.nombre,
+            email: perfil.email || '',
+            rol: perfil.rol,
+            empresa: perfil.empresa || '',
+            empresaId: perfil.empresaId || ''
         };
+    };
 
-        guardarSesion();
+    const perfilVigente = () => (ERP.nube ? ERP.nube.perfilGuardado() : null);
+
+    /**
+     * Entra con correo y contraseña. Devuelve `sinEmpresa` cuando la cuenta es
+     * válida pero todavía no pertenece a ninguna empresa: hay que crearla o
+     * pedirle al administrador que la habilite.
+     */
+    const iniciarSesion = async (email, clave) => {
+        if (!ERP.nube || !ERP.nube.configurada()) {
+            return { ok: false, error: 'Esta copia de la aplicación no tiene configurada la conexión con Supabase.' };
+        }
+        const res = await ERP.nube.entrar(email, clave);
+        if (!res.ok) return res;
+
+        const perfil = perfilVigente();
+        if (!perfil) return { ok: true, sinEmpresa: true };
+        if (perfil.activo === false) {
+            await ERP.nube.salir();
+            return { ok: false, error: 'Su usuario está desactivado. Contacte al administrador.' };
+        }
+
+        usuarioActual = desdePerfil(perfil);
         U.bus.emit('auth:login', usuarioActual);
         return { ok: true, usuario: usuarioActual };
     };
 
-    const cerrarSesion = () => {
-        usuarioActual = null;
-        try {
-            window.sessionStorage.removeItem(SESION_KEY);
-        } catch (error) {
-            // Sin sessionStorage la sesión simplemente no sobrevive a la recarga.
+    /** Crea la cuenta. Si el proyecto exige confirmar el correo, aún no hay sesión. */
+    const registrar = async (datos) => {
+        if (!ERP.nube || !ERP.nube.configurada()) {
+            return { ok: false, error: 'Esta copia de la aplicación no tiene configurada la conexión con Supabase.' };
         }
+        const res = await ERP.nube.registrarse(datos);
+        if (!res.ok || res.confirmar) return res;
+        usuarioActual = desdePerfil(perfilVigente());
+        if (usuarioActual) U.bus.emit('auth:login', usuarioActual);
+        return { ok: true, confirmar: false, usuario: usuarioActual, sinEmpresa: !usuarioActual };
+    };
+
+    const recuperar = (email) => ERP.nube.recuperar(email);
+
+    const cambiarClave = (nueva) => ERP.nube.cambiarClave(nueva);
+
+    const cerrarSesion = async () => {
+        usuarioActual = null;
+        if (ERP.nube) await ERP.nube.salir();
         U.bus.emit('auth:logout', null);
     };
 
-    const guardarSesion = () => {
-        try {
-            window.sessionStorage.setItem(SESION_KEY, JSON.stringify(usuarioActual));
-        } catch (error) {
-            // La aplicación sigue funcionando aunque no se pueda recordar la sesión.
-        }
-    };
-
-    /** Recupera la sesión de la pestaña actual, si existe y sigue siendo válida. */
+    /** Retoma la sesión guardada en este navegador. No necesita red. */
     const restaurarSesion = () => {
-        try {
-            const raw = window.sessionStorage.getItem(SESION_KEY);
-            if (!raw) return null;
-            const guardado = JSON.parse(raw);
-            const vigente = ERP.db.all('usuarios').find((u) => u.id === guardado.id);
-            if (!vigente || vigente.activo === false) return null;
-            usuarioActual = {
-                id: vigente.id, usuario: vigente.usuario, nombre: vigente.nombre, rol: vigente.rol
-            };
-            return usuarioActual;
-        } catch (error) {
-            return null;
-        }
+        usuarioActual = desdePerfil(perfilVigente());
+        return usuarioActual;
     };
 
-    /** Refleja en la sesión abierta los cambios hechos al propio usuario (nombre, rol, usuario). */
+    /**
+     * Relee el perfil vigente. Si el administrador cambió el rol, quitó el acceso
+     * o la sesión caducó (aquí o en otra pestaña), la aplicación lo nota en el
+     * siguiente montaje y en cada acción sensible.
+     */
     const sincronizarSesion = () => {
-        if (!usuarioActual) return null;
-        const vigente = ERP.db.all('usuarios').find((u) => u.id === usuarioActual.id);
-        if (!vigente || vigente.activo === false) {
-            cerrarSesion();
+        const vigente = desdePerfil(perfilVigente());
+        if (!vigente) {
+            usuarioActual = null;
             return null;
         }
-        usuarioActual = { id: vigente.id, usuario: vigente.usuario, nombre: vigente.nombre, rol: vigente.rol };
-        guardarSesion();
+        usuarioActual = vigente;
         return usuarioActual;
     };
 
     return {
         ROLES, PERMISOS, SOLO_ADMINISTRADOR,
-        iniciarSesion, cerrarSesion, restaurarSesion, sincronizarSesion,
+        iniciarSesion, registrar, recuperar, cambiarClave,
+        cerrarSesion, restaurarSesion, sincronizarSesion,
         usuario, puede, modulosPermitidos, modulosDeRol, guardarPermisos, etiquetaRol
     };
 })();

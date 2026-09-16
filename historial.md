@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 1.9.0 | 2026-09-15 | *(esta versión)* | Conexión con Supabase: base de datos compartida con descarga y subida de instantáneas, control de revisiones y subida automática opcional |
+| 2.0.0 | 2026-09-15 | *(esta versión)* | Identidad en Supabase Auth: registro con correo y contraseña, invitaciones por rol y ninguna contraseña en el navegador |
+| 1.9.0 | 2026-09-15 | `095d503` | Conexión con Supabase: base de datos compartida con descarga y subida de instantáneas, control de revisiones y subida automática opcional |
 | 1.8.0 | 2026-09-15 | `ca1c152` | **Piel visual Terra:** rediseño basado en los diseños de Stitch (.design/stitch_erp_financiero_colombiano): verde bosque #4a7c59 sobre crema #faf6f0 con ámbar y terracota, Literata para títulos, Nunito Sans para textos y JetBrains Mono para cifras, menú lateral claro con íconos Material Symbols, tarjetas con borde fino, esquinas de 12 px y sombras suaves, ventas en verde y gastos en terracota en los gráficos, tema oscuro cálido y objetivos táctiles de 44 px. Sin cambios de funcionalidad. |
 | 1.7.1 | 2026-09-14 | `f1c6bf3` | **Migración a Supabase, etapa 1:** esquema de 14 tablas con RLS por empresa y por módulo creado en el proyecto «ERP Financiero» (supabase/001_esquema_inicial.sql y 002_funciones_permisos_privadas.sql), probado con usuarios simulados. La app todavía usa localStorage. |
 | 1.7.0 | 2026-09-14 | `ef83a47` | **Tablero ejecutivo rediseñado:** jerarquía real de indicadores (4 principales con variación contra el periodo anterior y minigráfica de tendencia, 6 secundarios compactos), rejilla de 12 columnas con Ventas contra gastos, Cartera por antigüedad, Productos más vendidos y Distribución de gastos, barra de filtros fija al desplazarse y estado vacío explicado con acciones. Nuevo cálculo `ERP.finanzas.carteraPorAntiguedad` y nueva minigráfica `ERP.charts.chispa`. |
@@ -129,8 +130,8 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 - **Etapas:**
   1. **Esquema. HECHO el 2026-09-14.** `supabase/001_esquema_inicial.sql` y `supabase/002_funciones_permisos_privadas.sql` están aplicados.
   2. **Conexión de la app. HECHA el 2026-09-15.** `supabase/003_conexion_app.sql`, `004_endurecer_anon.sql` y `005_indice_sincronizado_por.sql`, más `assets/JS/nube.js` y la tarjeta «Nube (Supabase)» de Configuración. Ver *Nube: la base compartida*.
-  3. **Escritura directa contra PostgreSQL. PENDIENTE.** Funciones transaccionales para registrar ventas, compras, abonos y pagos (existencias, costo ponderado y saldos en una operación) y reemplazo de `db.js` módulo por módulo. Hasta entonces la app calcula en el navegador y sincroniza el conjunto completo.
-- **Lo que falta del lado del usuario:** crear en Supabase (Authentication → Users) un usuario por persona que vaya a sincronizar. Las contraseñas djb2 de la app no se pueden migrar a Supabase Auth, así que las dos autenticaciones conviven: la local decide qué ve cada quien dentro de la app, y la de Supabase decide quién toca los datos compartidos.
+  3. **Identidad en Supabase Auth. HECHA el 2026-09-15.** `supabase/006_registro_usuarios.sql` y la versión 2.0.0 de la aplicación. Ver *Registro de usuarios y contraseñas*.
+  4. **Escritura directa contra PostgreSQL. PENDIENTE.** Funciones transaccionales para registrar ventas, compras, abonos y pagos (existencias, costo ponderado y saldos en una operación) y reemplazo de `db.js` módulo por módulo. Hasta entonces la app calcula en el navegador y sincroniza el conjunto completo.
 - **Modelo:**
   - 14 tablas con `empresa_id`, que permiten varias empresas.
   - Los `id` son texto: se conservan los actuales al migrar y los nuevos reciben un UUID.
@@ -144,9 +145,26 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
   - `empresas` y `perfiles` solo los modifica el administrador.
   - `privado.empresa_actual()`, `privado.rol_actual()` y `privado.puede_modulo()` no están expuestas en la API.
   - `public.tomar_consecutivo('venta'|'compra')` numera de forma atómica.
-  - El asesor de seguridad deja 5 avisos `authenticated_security_definer_function_executable` (`mi_perfil`, `crear_empresa`, `descargar_snapshot`, `subir_snapshot` y `tomar_consecutivo`). **Son intencionales:** esas cinco funciones son la API de la app y cada una comprueba empresa, rol y permisos antes de actuar. Cualquier función nueva que no deba llamarse desde el navegador va al esquema `privado`.
+  - El asesor de seguridad deja 9 avisos `authenticated_security_definer_function_executable` (`mi_perfil`, `crear_empresa`, `descargar_snapshot`, `subir_snapshot`, `tomar_consecutivo`, `invitar_usuario`, `revocar_invitacion`, `actualizar_perfil` y `usuarios_empresa`). **Son intencionales:** esas cinco funciones son la API de la app y cada una comprueba empresa, rol y permisos antes de actuar. Cualquier función nueva que no deba llamarse desde el navegador va al esquema `privado`.
 - **Verificado:** con una transacción revertida y usuarios simulados, el vendedor lee su empresa, crea clientes y numera ventas (FV-0001, FV-0002), pero no crea gastos, no escribe en otra empresa, no modifica la empresa ni numera compras. Otra empresa solo ve sus datos y un usuario sin sesión no ve nada. La base quedó vacía tras la prueba.
 - **Al tocar el esquema:** aplicar con `apply_migration`, guardar la misma migración como `supabase/00N_*.sql` y volver a revisar los asesores de seguridad y rendimiento. `supabase/` está en `.vercelignore`.
+
+### Registro de usuarios y contraseñas
+
+- **Dónde viven las credenciales.** En `auth.users`, la tabla de Supabase Auth: correo y contraseña cifrada con bcrypt, invisible desde la API y desde el navegador. **No se creó una tabla propia de contraseñas a propósito:** cifrarlas a mano sería menos seguro y no traería confirmación de correo, recuperación ni caducidad de sesiones.
+- **`public.perfiles`** es la tabla de los usuarios de la aplicación: mismo `id` que `auth.users`, más `email`, `usuario`, `nombre`, `rol`, `activo` y `ultimo_acceso`. Nunca contiene contraseñas.
+- **`public.invitaciones`** decide quién puede registrarse: correo, usuario, nombre, rol, estado y vencimiento (30 días). Índice único sobre el correo mientras está `pendiente`, para que al registrarse no haya dos empresas candidatas.
+- **Disparadores sobre `auth.users`** (`privado.al_registrar_usuario`, `privado.al_cambiar_correo`): al crear la cuenta, si hay invitación vigente para ese correo se crea el perfil y la invitación queda `aceptada`; si el nombre de usuario ya se ocupó, se numera en vez de fallar. Al cambiar el correo de la cuenta, el perfil lo sigue.
+- **Sin invitación no hay empresa.** Quien se registra por su cuenta no entra a ninguna: la pantalla de acceso le ofrece crear la suya (`crear_empresa`), y queda como administrador. Así funciona el multiempresa: cada quien con sus datos, aislados por RLS.
+- **Funciones de administración** (solo rol administrador): `invitar_usuario` (si el correo ya tiene cuenta sin empresa, la vincula de una vez), `revocar_invitacion`, `actualizar_perfil` (nombre, rol y acceso; **nunca deja la empresa sin un administrador activo**) y `usuarios_empresa` (lista para Configuración).
+- **En la aplicación:**
+  - La pantalla de acceso tiene cuatro modos: entrar, crear cuenta, recuperar contraseña y crear empresa. La contraseña viaja a Supabase y **no se guarda en el navegador en ningún momento**; solo queda el testigo de sesión en `erp_nube_sesion_v1` y una copia del perfil en `erp_nube_perfil_v1`, que permite abrir la aplicación sin esperar a la red.
+  - Al arrancar se revalida contra el servidor: si el usuario fue desactivado, le cambiaron el rol o la sesión caducó, vuelve al acceso. Si solo falla la red, se sigue trabajando con el perfil guardado.
+  - Al entrar se comparan los datos locales con la empresa de quien entra (`data.meta.empresaNube`): si son de otra empresa se descargan los suyos; si nunca se han sincronizado, se avisa.
+  - Configuración → **Usuarios y accesos** lista los perfiles y las invitaciones pendientes, permite dar acceso por correo, cambiar nombre/rol/estado, revocar invitaciones y cambiar la propia contraseña.
+- **Lo que se eliminó en la 2.0.0:** `data.usuarios`, `db.hashClave`, `db.actualizarUsuario` y el ingreso con usuario y contraseña locales. `migrar()` **borra `data.usuarios` de cualquier navegador** que traiga datos anteriores, y `validarRespaldo` descarta esa lista al importar respaldos viejos. `datos-publicados.js` se regeneró sin usuarios (id `89c1b1d0dad5`).
+- **Lo que falta del lado del usuario:** crear la primera cuenta. Desde la propia aplicación con «Crear cuenta» (si el proyecto exige confirmar el correo, hay que abrir el enlace), o desde Supabase → Authentication → Add user con *Auto Confirm User*, que evita depender del correo.
+- **Verificado el 2026-09-15:** en una transacción revertida, 15 casos: registro sin invitación no da empresa; con invitación crea el perfil con su rol; el contador no puede invitar; invitar a quien ya tiene cuenta la vincula; correo repetido rechazado; no se puede dejar la empresa sin administrador; un usuario desactivado deja de entrar; y ni `perfiles` ni `invitaciones` tienen columna alguna de contraseña. En el navegador: los cuatro modos de la pantalla de acceso, validaciones de correo y contraseña, credenciales incorrectas contra el servidor real, y el borrado efectivo de los hash antiguos del `localStorage` al abrir la versión nueva.
 
 ### Nube: la base compartida
 
@@ -167,7 +185,7 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 
 ### Datos publicados con la app
 
-- **Qué son.** `assets/JS/datos-publicados.js` define `ERP.DATOS_PUBLICADOS = { id, fecha, archivo, datos }` y se carga antes de `db.js`. Lo genera `publicar_datos.py` desde un respaldo exportado, y el `id` es un hash del contenido. **El repositorio y el sitio son públicos**: el usuario aceptó publicar sus datos, incluidos los usuarios con contraseñas cifradas.
+- **Qué son.** `assets/JS/datos-publicados.js` define `ERP.DATOS_PUBLICADOS = { id, fecha, archivo, datos }` y se carga antes de `db.js`. Lo genera `publicar_datos.py` desde un respaldo exportado, y el `id` es un hash del contenido. **El repositorio y el sitio son públicos**: el usuario aceptó publicar sus datos. Desde la 2.0.0 el archivo **no trae usuarios ni contraseñas**; si `publicar_datos.py` se ejecuta con un respaldo viejo, `validarRespaldo` descarta esa lista.
 - **Flujo del usuario:**
   1. En su copia de trabajo, Exportar datos (JSON).
   2. `python publicar_datos.py "C:/Users/VENTAS 2/Downloads/respaldo-erp-….json"`, que valida, genera el archivo y numera la versión con `versionar.py`.
@@ -184,13 +202,13 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 
 - **Los datos viven por origen.** Cada navegador y cada dirección (archivo local `file://`, `localhost`, cada dominio de Vercel) tiene su propio `localStorage`. El código puede ser idéntico y mostrar otra empresa: eso son datos distintos, no una versión anterior. La versión del programa se confirma con el número en pantalla.
 - **`db.validarRespaldo(texto)` / `db.importarRespaldo(texto)`** («Importar respaldo (JSON)») llevan los datos de un origen a otro:
-  - Validan el JSON, el formato (`SCHEMA_VERSION`), que las colecciones sean listas y que exista un administrador activo.
+  - Validan el JSON, el formato (`SCHEMA_VERSION`) y que las colecciones sean listas.
   - Muestran un resumen y piden confirmar antes de reemplazar.
   - Si `persist()` falla, restauran los datos anteriores.
-  - Si el usuario conectado no existe en el respaldo, el montaje devuelve a la pantalla de acceso.
+  - Los usuarios no viajan en los respaldos: la sesión no se pierde al importar.
 
-- **`db.reset()`** («Reiniciar datos de demostración») regenera la empresa ficticia completa, incluidos los usuarios con sus contraseñas iniciales.
-- **`db.vaciar({ empresa, nit, capitalInicial })`** («Empezar desde cero») deja todas las colecciones vacías y reemplaza los datos de la empresa. Conserva los usuarios, `permisosRol` y los parámetros de IVA y nómina, y reinicia los consecutivos.
+- **`db.reset()`** («Reiniciar datos de demostración») regenera la empresa ficticia completa. No crea usuarios: quién entra lo decide Supabase.
+- **`db.vaciar({ empresa, nit, capitalInicial })`** («Empezar desde cero») deja todas las colecciones vacías y reemplaza los datos de la empresa. Conserva `permisosRol` y los parámetros de IVA y nómina, y reinicia los consecutivos. No toca los usuarios: están en Supabase.
   - Un sistema vacío no se vuelve a sembrar: `load()` solo siembra si no hay datos guardados o están dañados.
   - Todos los módulos toleran colecciones vacías. Una colección nueva debe ir en `emptySchema()` para que `vaciar` la limpie.
 
@@ -200,9 +218,9 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 
 ### Autenticación
 
-- **Local.** `hashClave` es djb2: separa responsabilidades, no es seguridad.
-- **Contraseñas iniciales.** En la semilla están como hash literal. No volver a escribirlas en texto plano en código, documentación, bocetos ni pantalla de acceso.
-- **Último administrador.** `db.actualizarUsuario` impide dejar el sistema sin administrador activo.
+- **Supabase Auth.** Desde la 2.0.0 no hay autenticación local: ver *Registro de usuarios y contraseñas*.
+- **Nunca** volver a guardar contraseñas —ni cifradas— en `localStorage`, en la semilla, en `datos-publicados.js`, en respaldos ni en la documentación.
+- **Roles y permisos** siguen siendo del lado del cliente para lo que se ve (`ERP.auth.modulosDeRol`) y del lado del servidor para lo que se toca (`privado.puede_modulo`). Las dos listas deben cambiar juntas.
 
 ### UI sin dependencias
 

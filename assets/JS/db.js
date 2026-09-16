@@ -22,7 +22,8 @@ ERP.db = (() => {
 
     const emptySchema = () => ({
         version: SCHEMA_VERSION,
-        usuarios: [],
+        // Los usuarios NO viven aquí: están en Supabase (public.perfiles) y sus
+        // contraseñas en auth.users, cifradas. Este navegador no guarda ninguna.
         terceros: [],
         productos: [],
         compras: [],
@@ -65,17 +66,6 @@ ERP.db = (() => {
     /* ============================================================
        Persistencia
        ============================================================ */
-
-    /** Hash ligero. NO es seguridad real: la autenticación definitiva
-     *  debe delegarse a Supabase Auth. Evita guardar claves en claro. */
-    const hashClave = (texto) => {
-        let h = 5381;
-        const s = String(texto ?? '');
-        for (let i = 0; i < s.length; i += 1) {
-            h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
-        }
-        return `h${h.toString(36)}`;
-    };
 
     const storageDisponible = () => {
         try {
@@ -244,6 +234,19 @@ ERP.db = (() => {
         return { ok: true, resumen: pub.resumen };
     };
 
+    /**
+     * Deja constancia de a qué empresa de la nube pertenecen estos datos. Al
+     * entrar, la aplicación compara: si son de otra empresa, trae los que
+     * corresponden en vez de mostrar los del inquilino anterior.
+     */
+    const marcarNube = (empresaId) => {
+        if (!data.meta) data.meta = { origen: 'local', editado: true };
+        if (data.meta.empresaNube === empresaId) return false;
+        data.meta.empresaNube = empresaId || null;
+        comoSistema(persist);
+        return true;
+    };
+
     /** Origen de los datos de este navegador y resumen de los publicados, para Configuración. */
     const estadoDatos = () => {
         const pub = datosPublicados();
@@ -256,8 +259,8 @@ ERP.db = (() => {
     /**
      * Deja el sistema en blanco para que una empresa registre su operación desde cero:
      * borra toda la operación, incluidos los datos de demostración. Conserva los
-     * usuarios (sin ellos no se podría volver a entrar), los permisos por rol y los
-     * parámetros de IVA y nómina, que son legales y no de la demostración.
+     * permisos por rol y los parámetros de IVA y nómina, que son legales y no de
+     * la demostración. Los usuarios no se tocan: viven en Supabase.
      * empresa: { empresa, nit, capitalInicial }
      */
     const vaciar = (empresa = {}) => {
@@ -268,7 +271,6 @@ ERP.db = (() => {
 
         const anterior = data.config;
         const nuevo = emptySchema();
-        nuevo.usuarios = data.usuarios;
         nuevo.config = {
             ...nuevo.config,
             ivaPct: anterior.ivaPct,
@@ -312,7 +314,7 @@ ERP.db = (() => {
             return fallo('El archivo no es un JSON válido. Use el archivo descargado con «Exportar datos (JSON)».');
         }
         if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)
-            || !Array.isArray(parsed.usuarios) || !Array.isArray(parsed.ventas)
+            || !Array.isArray(parsed.ventas)
             || !parsed.config || typeof parsed.config !== 'object') {
             return fallo('El archivo no es un respaldo de este sistema.');
         }
@@ -322,15 +324,11 @@ ERP.db = (() => {
         const coleccionDanada = COLECCIONES.find((clave) => clave in parsed && !Array.isArray(parsed[clave]));
         if (coleccionDanada) return fallo(`El respaldo está dañado: «${coleccionDanada}» no es una lista.`);
 
-        const usuarioInvalido = parsed.usuarios.find((u) => !u || !u.id || typeof u.usuario !== 'string'
-            || typeof u.clave !== 'string' || !ROLES_VALIDOS.includes(u.rol));
-        if (usuarioInvalido) return fallo('El respaldo tiene usuarios incompletos o con un rol desconocido.');
-        // Sin un administrador activo nadie podría volver a entrar a Configuración.
-        if (!parsed.usuarios.some((u) => u.rol === 'administrador' && u.activo !== false)) {
-            return fallo('El respaldo no tiene un administrador activo.');
-        }
-
         const datos = { ...emptySchema(), ...parsed, config: { ...emptySchema().config, ...parsed.config } };
+        // Un respaldo anterior a la 2.0.0 trae usuarios con su contraseña en
+        // hash. No se importan: quién entra lo decide Supabase Auth, y esos
+        // hashes no deben volver a tocar el navegador.
+        delete datos.usuarios;
         return {
             ok: true,
             datos,
@@ -343,8 +341,7 @@ ERP.db = (() => {
                 ventas: datos.ventas.filter((v) => !v.anulada).length,
                 compras: datos.compras.length,
                 gastos: datos.gastos.length,
-                empleados: datos.empleados.length,
-                usuarios: datos.usuarios.map((u) => u.usuario)
+                empleados: datos.empleados.length
             }
         };
     };
@@ -376,6 +373,14 @@ ERP.db = (() => {
     const migrar = () => {
         let cambios = false;
         const empleados = Array.isArray(data.empleados) ? data.empleados : [];
+
+        // Hasta la 1.9.0 los usuarios y sus contraseñas (hash djb2) se guardaban
+        // en este navegador. Ahora la identidad la lleva Supabase Auth, así que
+        // se borran en cuanto se abre la aplicación: ningún rastro se conserva.
+        if ('usuarios' in data) {
+            delete data.usuarios;
+            cambios = true;
+        }
 
         // Las ventas antiguas guardaban el vendedor como texto libre.
         // Se enlazan al empleado de nómina cuando el nombre coincide sin ambigüedad.
@@ -1172,49 +1177,6 @@ ERP.db = (() => {
        Usuarios del sistema
        ============================================================ */
 
-    const ROLES_VALIDOS = ['administrador', 'contador', 'vendedor'];
-
-    /**
-     * Edita usuario, nombre, rol y, si se indica, la contraseña.
-     * Una contraseña vacía conserva la actual.
-     */
-    const actualizarUsuario = (id, cambios) => {
-        const registro = get('usuarios', id);
-        if (!registro) return fallo('El usuario no existe.');
-
-        const usuario = String(cambios.usuario || '').trim().toLowerCase();
-        const nombre = String(cambios.nombre || '').trim();
-        const rol = cambios.rol;
-        const clave = String(cambios.clave || '');
-
-        if (!/^[a-z0-9._-]{3,30}$/.test(usuario)) {
-            return fallo('El usuario debe tener entre 3 y 30 caracteres: letras sin tildes, números, punto, guion o guion bajo, sin espacios.');
-        }
-        if (all('usuarios').some((u) => u.id !== id && String(u.usuario).toLowerCase() === usuario)) {
-            return fallo(`Ya existe otro usuario «${usuario}».`);
-        }
-        if (nombre.length < 3) return fallo('El nombre debe tener al menos 3 caracteres.');
-        if (!ROLES_VALIDOS.includes(rol)) return fallo('Seleccione un rol válido.');
-        if (clave && clave.trim() === '') return fallo('La contraseña no puede estar formada solo por espacios.');
-        if (clave && clave.length < 6) return fallo('La contraseña debe tener al menos 6 caracteres.');
-
-        // El sistema nunca puede quedar sin alguien que administre usuarios y configuración.
-        if (registro.rol === 'administrador' && rol !== 'administrador') {
-            const otrosAdministradores = all('usuarios').filter(
-                (u) => u.id !== id && u.rol === 'administrador' && u.activo !== false);
-            if (!otrosAdministradores.length) {
-                return fallo('Es el único administrador. Asigne ese rol a otro usuario antes de cambiarle el rol a este.');
-            }
-        }
-
-        Object.assign(registro, { usuario, nombre, rol });
-        if (clave) registro.clave = hashClave(clave);
-
-        persist();
-        U.bus.emit('db:changed', { coleccion: 'usuarios', motivo: 'update' });
-        return { ok: true, usuario: { id: registro.id, usuario, nombre, rol }, claveCambiada: Boolean(clave) };
-    };
-
     /* ============================================================
        Semilla de demostración
        ============================================================ */
@@ -1240,14 +1202,6 @@ ERP.db = (() => {
     const sembrarDatos = () => {
         rngState = 987654321;
         const cfg = data.config;
-
-        data.usuarios = [
-            // Contraseñas iniciales guardadas solo como hash, para no publicarlas en el
-            // código. El administrador las entrega y debe cambiarlas en Configuración.
-            { id: 'usr_admin', usuario: 'admin', clave: 'h1a4lh3u', nombre: 'Laura Restrepo', rol: 'administrador', activo: true },
-            { id: 'usr_conta', usuario: 'contador', clave: 'h13oiwci', nombre: 'Julián Ospina', rol: 'contador', activo: true },
-            { id: 'usr_vende', usuario: 'vendedor', clave: 'hn08tfh', nombre: 'Marcela Gómez', rol: 'vendedor', activo: true }
-        ];
 
         const clientesSemilla = [
             ['NIT', '900.412.556-3', 'Ferretería El Tornillo S.A.S.', '(604) 512 3344', 'compras@eltornillo.co', 'Calle 30 # 65-12, Medellín', 36000000],
@@ -1576,8 +1530,8 @@ ERP.db = (() => {
        ============================================================ */
 
     return {
-        STORAGE_KEY, load, reset, vaciar, validarRespaldo, importarRespaldo, cargarPublicados, estadoDatos,
-        persist, exportJSON, hashClave,
+        STORAGE_KEY, load, reset, vaciar, validarRespaldo, importarRespaldo, cargarPublicados, estadoDatos, marcarNube,
+        persist, exportJSON,
         all, get, insert, update, remove,
         config, updateConfig,
         clientes, proveedores, productos, productoPorId, terceroPorId,
@@ -1588,7 +1542,6 @@ ERP.db = (() => {
         registrarCompra, registrarVenta, anularVenta,
         registrarAbono, eliminarAbono, registrarPagoCompra, registrarGasto,
         editarVenta, editarCompra, editarAbono, buscarDuplicado, asegurarTercero,
-        actualizarUsuario,
         CATEGORIAS_GASTO, MEDIOS_PAGO,
         get persistente() { return persistenciaActiva; }
     };

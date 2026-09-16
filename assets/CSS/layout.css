@@ -38,6 +38,12 @@
 
 .login-card .btn { width: 100%; padding: 15px 22px; font-size: 0.95rem; }
 
+/* Los enlaces de la tarjeta de acceso (crear cuenta, recuperar) no son
+   acciones principales: no ocupan todo el ancho. */
+.login-card .btn-sm { width: auto; padding: 9px 14px; font-size: 0.84rem; }
+.login-card .row { justify-content: center; }
+.login-card > .hint { display: block; margin-top: var(--sp-4); text-align: center; }
+
 /* ---------- Estructura principal ---------- */
 
 .app-shell {
