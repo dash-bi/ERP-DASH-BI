@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 2.0.0 | 2026-09-15 | *(esta versión)* | Identidad en Supabase Auth: registro con correo y contraseña, invitaciones por rol y ninguna contraseña en el navegador |
+| 2.1.0 | 2026-09-16 | *(esta versión)* | El enlace de los correos de Supabase vuelve a la dirección donde se usa la app, y la app lo atiende |
+| 2.0.0 | 2026-09-15 | `7ef7b2c` | Identidad en Supabase Auth: registro con correo y contraseña, invitaciones por rol y ninguna contraseña en el navegador |
 | 1.9.0 | 2026-09-15 | `095d503` | Conexión con Supabase: base de datos compartida con descarga y subida de instantáneas, control de revisiones y subida automática opcional |
 | 1.8.0 | 2026-09-15 | `ca1c152` | **Piel visual Terra:** rediseño basado en los diseños de Stitch (.design/stitch_erp_financiero_colombiano): verde bosque #4a7c59 sobre crema #faf6f0 con ámbar y terracota, Literata para títulos, Nunito Sans para textos y JetBrains Mono para cifras, menú lateral claro con íconos Material Symbols, tarjetas con borde fino, esquinas de 12 px y sombras suaves, ventas en verde y gastos en terracota en los gráficos, tema oscuro cálido y objetivos táctiles de 44 px. Sin cambios de funcionalidad. |
 | 1.7.1 | 2026-09-14 | `f1c6bf3` | **Migración a Supabase, etapa 1:** esquema de 14 tablas con RLS por empresa y por módulo creado en el proyecto «ERP Financiero» (supabase/001_esquema_inicial.sql y 002_funciones_permisos_privadas.sql), probado con usuarios simulados. La app todavía usa localStorage. |
@@ -83,6 +84,7 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 - **`index.html` y `vercel.json` están en la raíz del repositorio**, así que Vercel publica la raíz sin `outputDirectory`. **Root Directory** en cada proyecto de Vercel debe quedar **vacío**: si apunta a «Aplicación con Claude», el build falla porque esa subcarpeta ya no existe dentro del repositorio.
 - **`.vercelignore`** evita publicar `versionar.py` y los archivos de configuración de git.
 - **Protección de Vercel.** `finanzas-dash-bi.vercel.app` tiene Deployment Protection y redirige al login de Vercel.
+- **Direcciones autorizadas en Supabase.** Authentication → URL Configuration. La **Site URL** debe ser la dirección de producción (la de Vercel), y en **Redirect URLs** deben estar todas las direcciones desde las que se use la app, incluida la de desarrollo. Si no coinciden, los correos de confirmación y de recuperación llevan a `localhost:3000`.
 - **Versión vieja en producción.** Revisar en Vercel que el despliegue *Current* sea el último commit; un Instant Rollback lo deja fijo.
 
 ## Arquitectura
@@ -163,6 +165,11 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
   - Al entrar se comparan los datos locales con la empresa de quien entra (`data.meta.empresaNube`): si son de otra empresa se descargan los suyos; si nunca se han sincronizado, se avisa.
   - Configuración → **Usuarios y accesos** lista los perfiles y las invitaciones pendientes, permite dar acceso por correo, cambiar nombre/rol/estado, revocar invitaciones y cambiar la propia contraseña.
 - **Lo que se eliminó en la 2.0.0:** `data.usuarios`, `db.hashClave`, `db.actualizarUsuario` y el ingreso con usuario y contraseña locales. `migrar()` **borra `data.usuarios` de cualquier navegador** que traiga datos anteriores, y `validarRespaldo` descarta esa lista al importar respaldos viejos. `datos-publicados.js` se regeneró sin usuarios (id `89c1b1d0dad5`).
+- **Enlaces que Supabase manda por correo (confirmar cuenta y recuperar contraseña).**
+  - La app añade `?redirect_to=<origen + ruta actual>` a `/auth/v1/signup` y `/auth/v1/recover` (`nube.direccionDeRegreso`), así el enlace devuelve a la dirección desde la que se está usando. Abierta como archivo local (`file://`) no hay dirección de regreso y la pantalla de registro lo advierte.
+  - **Supabase solo respeta `redirect_to` si la dirección está en la lista de «Redirect URLs»** del proyecto (Authentication → URL Configuration). Si no está, usa la **Site URL**, que de fábrica es `http://localhost:3000` y no existe para nadie. Esa lista **no se puede cambiar por SQL ni por el conector MCP**: hay que hacerlo en el panel de Supabase.
+  - Al volver, Supabase deja la sesión en el fragmento de la dirección (`#access_token=…&type=signup|recovery`). `nube.consumirEnlace()` la recoge, **limpia la barra de direcciones** para no dejar el testigo a la vista ni en el historial, y la app decide: `recovery` abre la pantalla «Ponga su contraseña nueva»; `signup` abre la sesión; un enlace vencido muestra «El enlace del correo ya venció o se usó antes».
+  - También se atiende el caso de que el correo abra una pestaña que ya tenía la aplicación, donde el navegador solo cambia el fragmento y no recarga (`hashchange`).
 - **Lo que falta del lado del usuario:** crear la primera cuenta. Desde la propia aplicación con «Crear cuenta» (si el proyecto exige confirmar el correo, hay que abrir el enlace), o desde Supabase → Authentication → Add user con *Auto Confirm User*, que evita depender del correo.
 - **Verificado el 2026-09-15:** en una transacción revertida, 15 casos: registro sin invitación no da empresa; con invitación crea el perfil con su rol; el contador no puede invitar; invitar a quien ya tiene cuenta la vincula; correo repetido rechazado; no se puede dejar la empresa sin administrador; un usuario desactivado deja de entrar; y ni `perfiles` ni `invitaciones` tienen columna alguna de contraseña. En el navegador: los cuatro modos de la pantalla de acceso, validaciones de correo y contraseña, credenciales incorrectas contra el servidor real, y el borrado efectivo de los hash antiguos del `localStorage` al abrir la versión nueva.
 

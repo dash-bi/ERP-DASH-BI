@@ -6,7 +6,7 @@ window.ERP = window.ERP || {};
 
 /* Versión publicada. Al cambiarla, actualizar también el ?v= de index.html
    para que el navegador no reutilice los archivos anteriores. */
-ERP.VERSION = '2.0.0';
+ERP.VERSION = '2.1.0';
 
 /* ============================================================
    Configuración del sistema (solo administrador)
@@ -1071,7 +1071,9 @@ ERP.app = (() => {
      * Auth. La contraseña no se guarda en este navegador en ningún momento:
      * solo queda el testigo de sesión que devuelve el servidor.
      *
-     * modo: entrar | registrar | recuperar | empresa
+     * modo: entrar | registrar | recuperar | nueva-clave | empresa
+     *   nueva-clave aparece al volver del enlace de recuperación que llega por
+     *   correo: Supabase ya dio una sesión, solo falta poner la contraseña.
      *   empresa aparece cuando la cuenta es válida pero todavía no pertenece a
      *   ninguna empresa: se crea la propia o se espera a que un administrador
      *   dé acceso a ese correo.
@@ -1114,6 +1116,8 @@ ERP.app = (() => {
                 ui.campo('Nombre', campos.nombre),
                 ui.campo('Correo electrónico', campos.email),
                 ui.campo('Contraseña', campos.clave, { ayuda: 'Se guarda cifrada en Supabase. No queda en este navegador.' }),
+                ERP.nube.direccionDeRegreso() ? null : ui.banner('Abra la aplicación desde su dirección web',
+                    'Al abrirla como archivo local, el enlace de confirmación no puede regresar aquí.', 'warning'),
                 btn,
                 el('div', { class: 'row row-wrap' }, [enlace('Ya tengo cuenta', 'entrar')])
             ]);
@@ -1170,6 +1174,53 @@ ERP.app = (() => {
                     'Si ese correo tiene cuenta, recibirá el enlace en unos minutos. Revise también el correo no deseado.', 'info'));
             });
             primerCampo = email;
+
+        } else if (modo === 'nueva-clave') {
+            const campos = {
+                clave: ui.input({ tipo: 'password', autocomplete: 'new-password', placeholder: 'Mínimo 8 caracteres' }),
+                confirmacion: ui.input({ tipo: 'password', autocomplete: 'new-password', placeholder: 'Repita la contraseña' })
+            };
+            const btn = el('button', { class: 'btn', text: 'Guardar contraseña', attrs: { type: 'submit' }, style: { width: '100%' } });
+
+            formulario = el('form', { class: 'stack' }, [
+                ui.banner('Ponga su contraseña nueva',
+                    'Abrió el enlace que le enviamos por correo. Escriba la contraseña con la que entrará de ahora en adelante.', 'info'),
+                errores,
+                ui.campo('Contraseña nueva', campos.clave),
+                ui.campo('Repita la contraseña', campos.confirmacion),
+                btn
+            ]);
+
+            formulario.addEventListener('submit', async (evento) => {
+                evento.preventDefault();
+                U.clear(errores);
+                if (campos.clave.value !== campos.confirmacion.value) {
+                    errores.appendChild(ui.banner('No coinciden', 'Las dos contraseñas deben ser iguales.', 'danger'));
+                    return;
+                }
+                ocupar(btn, 'Guardando…');
+                const res = await ERP.auth.cambiarClave(campos.clave.value);
+                campos.clave.value = '';
+                campos.confirmacion.value = '';
+                liberar(btn);
+                if (!res.ok) {
+                    errores.appendChild(ui.banner('No se pudo guardar', res.error, 'danger'));
+                    return;
+                }
+                const consulta = await ERP.nube.cargarPerfil();
+                const usuario = ERP.auth.restaurarSesion();
+                if (!consulta.ok) {
+                    pantallaAcceso('entrar', ui.banner('Contraseña cambiada',
+                        'Ya puede entrar con su contraseña nueva.', 'success'));
+                    return;
+                }
+                if (!usuario) {
+                    pantallaAcceso('empresa');
+                    return;
+                }
+                entrarAlSistema(usuario);
+            });
+            primerCampo = campos.clave;
 
         } else if (modo === 'empresa') {
             const campos = {
@@ -1577,25 +1628,64 @@ ERP.app = (() => {
             }
         }, 200));
 
+        // Quien llega desde el enlace de un correo (confirmar la cuenta o
+        // recuperar la contraseña) trae la sesión en la dirección. Se recoge
+        // antes que nada y se limpia la barra de direcciones.
+        const hayNube = Boolean(ERP.nube && ERP.nube.configurada());
+        const enlace = hayNube ? ERP.nube.consumirEnlace() : null;
+        const recuperando = Boolean(enlace && enlace.ok && enlace.tipo === 'recovery');
+
         // La sesión guardada abre la aplicación sin esperar a la red; enseguida
         // se revalida contra el servidor. Si allí el usuario ya no existe, fue
         // desactivado o la sesión caducó, se vuelve al acceso.
-        if (ERP.auth.restaurarSesion()) {
+        if (enlace && !enlace.ok) {
+            pantallaAcceso('entrar', ui.banner('El enlace del correo no sirvió', enlace.error, 'warning'));
+        } else if (recuperando) {
+            pantallaAcceso('nueva-clave');
+        } else if (enlace && enlace.ok) {
+            pantallaAcceso('entrar', ui.banner('Cuenta confirmada', 'Un momento, estamos abriendo su sesión…', 'info'));
+        } else if (ERP.auth.restaurarSesion()) {
             montarAplicacion();
         } else {
             pantallaAcceso();
         }
 
-        if (ERP.nube && ERP.nube.configurada()) {
+        // El correo puede abrirse en una pestaña que ya tenía la aplicación: ahí
+        // el navegador solo cambia la dirección, sin recargar.
+        if (hayNube) {
+            window.addEventListener('hashchange', () => {
+                const tardio = ERP.nube.consumirEnlace();
+                if (!tardio) return;
+                if (!tardio.ok) {
+                    pantallaAcceso('entrar', ui.banner('El enlace del correo no sirvió', tardio.error, 'warning'));
+                    return;
+                }
+                if (tardio.tipo === 'recovery') {
+                    pantallaAcceso('nueva-clave');
+                    return;
+                }
+                ERP.nube.cargarPerfil().then(() => {
+                    const usuario = ERP.auth.sincronizarSesion();
+                    if (usuario) entrarAlSistema(usuario);
+                    else pantallaAcceso('empresa');
+                });
+            });
+        }
+
+        if (hayNube) {
             ERP.nube.iniciar().then((res) => {
-                if (!res || !res.revalidado) return;
+                // Con el enlace de recuperación, primero se pone la contraseña.
+                if (recuperando || !res || !res.revalidado) return;
                 const antes = Boolean(ERP.auth.usuario());
                 const ahora = Boolean(ERP.auth.sincronizarSesion());
-                if (antes && !ahora) {
+                if (ahora) {
+                    montarAplicacion();
+                } else if (enlace && enlace.ok) {
+                    // Cuenta recién confirmada a la que nadie ha dado empresa.
+                    pantallaAcceso('empresa');
+                } else if (antes) {
                     pantallaAcceso('entrar', ui.banner('Su sesión terminó',
                         'El administrador cambió su acceso o la sesión caducó. Ingrese de nuevo.', 'warning'));
-                } else if (ahora) {
-                    montarAplicacion();
                 }
             });
         }

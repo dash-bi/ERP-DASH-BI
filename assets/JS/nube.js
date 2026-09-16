@@ -123,6 +123,78 @@ ERP.nube = (() => {
         return String(c.message || c.error_description || c.msg || c.error || porDefecto);
     };
 
+    /* ---------- Enlaces que Supabase envía por correo ---------- */
+
+    /**
+     * Dirección a la que debe volver quien abre el enlace del correo: la misma
+     * desde la que usa la aplicación. Sin esto, Supabase usa la «Site URL» del
+     * proyecto, que de fábrica es http://localhost:3000 y no existe para nadie.
+     *
+     * Supabase solo respeta esta dirección si está en la lista de
+     * «Redirect URLs» del proyecto (Authentication → URL Configuration); si no
+     * está, ignora el dato y usa la Site URL. Ahí es donde hay que autorizar
+     * cada dominio desde el que se use la aplicación.
+     *
+     * Devuelve cadena vacía cuando la app se abrió como archivo local
+     * (file://), porque no es una dirección a la que se pueda volver.
+     */
+    const direccionDeRegreso = () => {
+        const { origin, pathname } = window.location;
+        if (!origin || origin === 'null' || !/^https?:/.test(origin)) return '';
+        return `${origin}${pathname}`;
+    };
+
+    const conRegreso = (ruta) => {
+        const destino = direccionDeRegreso();
+        return destino ? `${ruta}?redirect_to=${encodeURIComponent(destino)}` : ruta;
+    };
+
+    /**
+     * Recoge la sesión que Supabase deja en la dirección al volver del correo
+     * (#access_token=…&type=signup|recovery|…) y limpia la barra de
+     * direcciones para que no quede un testigo a la vista ni en el historial.
+     *
+     * Devuelve null si no se llegó desde un enlace.
+     */
+    const consumirEnlace = () => {
+        const bruto = String(window.location.hash || '').replace(/^#/, '');
+        if (!bruto || !/access_token|error/.test(bruto)) return null;
+
+        const datos = new URLSearchParams(bruto);
+        const limpiar = () => {
+            const limpia = window.location.pathname + window.location.search;
+            try {
+                window.history.replaceState(null, '', limpia);
+            } catch (error) {
+                window.location.hash = '';
+            }
+        };
+
+        const error = datos.get('error_description') || datos.get('error');
+        if (error) {
+            limpiar();
+            const texto = /expired|invalid/i.test(error)
+                ? 'El enlace del correo ya venció o se usó antes. Pida uno nuevo.'
+                : decodeURIComponent(String(error).replace(/\+/g, ' '));
+            return { ok: false, tipo: datos.get('type') || '', error: texto };
+        }
+
+        const acceso = datos.get('access_token');
+        const refresco = datos.get('refresh_token');
+        if (!acceso || !refresco) {
+            limpiar();
+            return { ok: false, tipo: datos.get('type') || '', error: 'El enlace del correo llegó incompleto. Pida uno nuevo.' };
+        }
+
+        recordarSesion({
+            access_token: acceso,
+            refresh_token: refresco,
+            expires_in: Number(datos.get('expires_in')) || 3600
+        }, '');
+        limpiar();
+        return { ok: true, tipo: datos.get('type') || 'signup' };
+    };
+
     /* ---------- Sesión de Supabase Auth ---------- */
 
     const recordarSesion = (datos, email) => {
@@ -265,7 +337,7 @@ ERP.nube = (() => {
         if (clave.length < 8) return fallo('La contraseña debe tener al menos 8 caracteres.');
         if (nombre.length < 3) return fallo('Escriba su nombre completo.');
 
-        const respuesta = await enviar('/auth/v1/signup', {
+        const respuesta = await enviar(conRegreso('/auth/v1/signup'), {
             method: 'POST',
             headers: { apikey: PROYECTO.clave, 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: correo, password: clave, data: { nombre } })
@@ -297,7 +369,7 @@ ERP.nube = (() => {
     const recuperar = (email) => conOcupado('recuperando', async () => {
         const correo = String(email || '').trim();
         if (!CORREO.test(correo)) return fallo('Escriba un correo electrónico válido.');
-        const respuesta = await enviar('/auth/v1/recover', {
+        const respuesta = await enviar(conRegreso('/auth/v1/recover'), {
             method: 'POST',
             headers: { apikey: PROYECTO.clave, 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: correo })
@@ -312,7 +384,10 @@ ERP.nube = (() => {
         const clave = String(nueva || '');
         if (clave.length < 8) return fallo('La contraseña debe tener al menos 8 caracteres.');
         const credencial = await tokenValido();
-        if (!credencial.ok) return credencial;
+        if (!credencial.ok) {
+            // Llegando desde el correo, lo único que pudo fallar es el enlace.
+            return fallo('Su sesión no está activa. Si llegó desde un correo, el enlace ya venció: pida otro.');
+        }
         const respuesta = await enviar('/auth/v1/user', {
             method: 'PUT',
             headers: {
@@ -498,6 +573,7 @@ ERP.nube = (() => {
         PROYECTO_URL: PROYECTO.url,
         configurada, conectado, estado, iniciar,
         entrar, registrarse, recuperar, cambiarClave, salir,
+        consumirEnlace, direccionDeRegreso,
         cargarPerfil, crearEmpresa,
         perfilGuardado: () => (sesion && perfil ? { ...perfil } : null),
         usuariosEmpresa, invitar, revocarInvitacion, actualizarPerfil,
