@@ -29,3 +29,20 @@ desktop.ini
 *.bak
 .vscode/
 .idea/
+
+# ---------------------------------------------------------------
+# Proyecto aparte que vive en esta carpeta (AI Studio, React+Vite).
+# No es la aplicación: si llega al repositorio, Vercel detecta su
+# package.json, compila con Vite y deja de publicar este index.html.
+# ---------------------------------------------------------------
+/package.json
+/bun.lock
+/vite.config.ts
+/tsconfig.json
+/server.ts
+/metadata.json
+/README.md
+/src/
+/erp-financiero---copiloto-inteligente/
+/node_modules/
+/dist/
