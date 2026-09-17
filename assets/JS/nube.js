@@ -521,6 +521,36 @@ ERP.nube = (() => {
         return { ok: true };
     });
 
+    /* ---------- Plataforma (super administrador) ---------- */
+
+    /** Organizaciones registradas, con sus administradores y su volumen de datos. */
+    const saasOrganizaciones = async () => {
+        const res = await rpc('saas_listar_organizaciones');
+        if (!res.ok) return res;
+        const datos = res.datos || {};
+        return { ok: true, organizaciones: datos.organizaciones || [], resumen: datos.resumen || {} };
+    };
+
+    /** Da de alta una organización y a su administrador en una sola operación. */
+    const saasCrearOrganizacion = (datos = {}) => conOcupado('creando', async () => {
+        const res = await rpc('saas_crear_organizacion_con_admin', {
+            p_nombre_empresa: String(datos.razonSocial || '').trim(),
+            p_email_admin: String(datos.email || '').trim(),
+            p_nombre_admin: String(datos.nombre || '').trim(),
+            p_nit: String(datos.nit || '').trim()
+        });
+        return res.ok ? { ok: true, organizacion: res.datos || {} } : res;
+    });
+
+    /** Suspender deja fuera a todos los usuarios de esa organización sin borrar nada. */
+    const saasCambiarEstado = (empresaId, estado) => conOcupado('guardando', async () => {
+        const res = await rpc('saas_cambiar_estado_organizacion', {
+            p_empresa_id: empresaId,
+            p_estado: estado
+        });
+        return res.ok ? { ok: true, organizacion: res.datos || {} } : res;
+    });
+
     /* ---------- Subida automática ---------- */
 
     const puedeSubirSolo = () => prefs().auto && conectado() && perfil && perfil.rol === 'administrador' && !ocupado;
@@ -577,6 +607,7 @@ ERP.nube = (() => {
         cargarPerfil, crearEmpresa,
         perfilGuardado: () => (sesion && perfil ? { ...perfil } : null),
         usuariosEmpresa, invitar, revocarInvitacion, actualizarPerfil,
+        saasOrganizaciones, saasCrearOrganizacion, saasCambiarEstado,
         descargar, subir,
         auto: () => prefs().auto,
         activarAuto: (valor) => guardarPrefs({ auto: Boolean(valor) })

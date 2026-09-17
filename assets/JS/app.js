@@ -6,7 +6,7 @@ window.ERP = window.ERP || {};
 
 /* Versión publicada. Al cambiarla, actualizar también el ?v= de index.html
    para que el navegador no reutilice los archivos anteriores. */
-ERP.VERSION = '2.1.0';
+ERP.VERSION = '2.2.0';
 
 /* ============================================================
    Configuración del sistema (solo administrador)
@@ -50,8 +50,8 @@ ERP.configuracion = (() => {
         const campos = {
             email: ui.input({ tipo: 'email', placeholder: 'persona@empresa.com', autocomplete: 'off' }),
             nombre: ui.input({ placeholder: 'Nombre y apellido' }),
-            rol: ui.select(Object.entries(ERP.auth.ROLES).map(([valor, r]) => ({ valor, texto: r.etiqueta })),
-                { valor: 'vendedor' })
+            rol: ui.select(ERP.auth.ROLES_EMPRESA.map((valor) => ({ valor, texto: ERP.auth.ROLES[valor].etiqueta })),
+                { valor: 'auxiliar' })
         };
         const errores = el('div');
 
@@ -131,7 +131,7 @@ ERP.configuracion = (() => {
 
         const campos = {
             nombre: ui.input({ valor: registro.nombre }),
-            rol: ui.select(Object.entries(ERP.auth.ROLES).map(([valor, r]) => ({ valor, texto: r.etiqueta })),
+            rol: ui.select(ERP.auth.ROLES_EMPRESA.map((valor) => ({ valor, texto: ERP.auth.ROLES[valor].etiqueta })),
                 { valor: registro.rol })
         };
         const activo = el('input', {
@@ -279,35 +279,54 @@ ERP.configuracion = (() => {
             }
 
             const actual = ERP.auth.usuario();
-            const tabla = el('div', { class: 'table-wrap' }, [
-                el('table', { class: 'data' }, [
-                    el('thead', {}, [el('tr', {}, [
-                        el('th', { text: 'Usuario', attrs: { scope: 'col' } }),
-                        el('th', { text: 'Nombre', attrs: { scope: 'col' } }),
-                        el('th', { text: 'Correo', attrs: { scope: 'col' } }),
-                        el('th', { text: 'Rol', attrs: { scope: 'col' } }),
-                        el('th', { class: 'num', text: 'Módulos', attrs: { scope: 'col' } }),
-                        el('th', { attrs: { scope: 'col' } }, [el('span', { class: 'visually-hidden', text: 'Acciones' })])
-                    ])]),
-                    el('tbody', {}, cacheUsuarios.usuarios.map((u) => el('tr', {}, [
-                        el('td', {}, [el('div', { class: 'row' }, [
-                            el('span', { class: 'strong', text: u.usuario }),
+            const usuarios = cacheUsuarios.usuarios;
+
+            /* Una tarjeta por persona. El árbol se arma con parent_id, que el
+               servidor rellena con quien dio el alta. */
+            const ficha = (u, esRaiz) => el('div', { class: `arbol-nodo${esRaiz ? ' es-raiz' : ''}${u.activo === false ? ' sin-acceso' : ''}` }, [
+                el('div', { class: 'arbol-quien' }, [
+                    el('span', { class: 'arbol-avatar', text: U.initials(u.nombre || u.usuario), attrs: { 'aria-hidden': 'true' } }),
+                    el('div', { class: 'grow' }, [
+                        el('div', { class: 'row' }, [
+                            el('span', { class: 'strong', text: u.nombre }),
                             actual && actual.id === u.id ? ui.badge('Usted', 'neutral') : null,
                             u.activo === false ? ui.badge('Sin acceso', 'danger') : null
-                        ])]),
-                        el('td', { text: u.nombre }),
-                        el('td', { text: u.email || '—' }),
-                        el('td', {}, [ui.badge(ERP.auth.etiquetaRol(u.rol), 'info')]),
-                        el('td', { class: 'num', text: U.num(ERP.auth.modulosDeRol(u.rol).length) }),
-                        el('td', { class: 'text-right' }, [el('button', {
-                            class: 'btn btn-ghost btn-sm', text: 'Editar',
-                            attrs: { type: 'button', 'aria-label': `Editar el usuario ${u.usuario}` },
-                            on: { click: () => abrirEdicionUsuario(u, pintar) }
-                        })])
-                    ])))
+                        ]),
+                        el('span', { class: 'arbol-correo', text: u.email || u.usuario })
+                    ]),
+                    ui.badge(ERP.auth.etiquetaRol(u.rol), u.rol === 'administrador' ? 'success' : 'info'),
+                    el('span', { class: 'arbol-modulos', text: `${U.num(ERP.auth.modulosDeRol(u.rol).length)} módulos` }),
+                    el('button', {
+                        class: 'btn btn-ghost btn-sm', text: 'Editar',
+                        attrs: { type: 'button', 'aria-label': `Editar el usuario ${u.usuario}` },
+                        on: { click: () => abrirEdicionUsuario(u, pintar) }
+                    })
                 ])
             ]);
-            cuerpo.appendChild(tabla);
+
+            const administradores = usuarios.filter((u) => u.rol === 'administrador');
+            const operativos = usuarios.filter((u) => u.rol !== 'administrador');
+
+            const arbol = el('div', { class: 'arbol' });
+            administradores.forEach((jefe) => {
+                const suyos = operativos.filter((u) => u.parentId === jefe.id);
+                arbol.appendChild(el('div', { class: 'arbol-rama' }, [
+                    ficha(jefe, true),
+                    suyos.length ? el('div', { class: 'arbol-hijos' }, suyos.map((u) => ficha(u, false))) : null
+                ]));
+            });
+
+            // Perfiles anteriores a esta versión no guardan de quién dependen.
+            const sueltos = operativos.filter((u) => !administradores.some((a) => a.id === u.parentId));
+            if (sueltos.length) {
+                arbol.appendChild(el('div', { class: 'arbol-rama' }, [
+                    el('p', { class: 'arbol-titulo', text: 'Sin jefe registrado' }),
+                    el('div', { class: 'arbol-hijos' }, sueltos.map((u) => ficha(u, false)))
+                ]));
+            }
+            if (!usuarios.length) arbol.appendChild(ui.estadoVacio('Todavía no hay usuarios', 'Dé acceso a la primera persona con su correo.'));
+
+            cuerpo.appendChild(arbol);
 
             if (cacheUsuarios.invitaciones.length) {
                 cuerpo.appendChild(el('h3', { text: 'Invitaciones pendientes' }));
@@ -371,9 +390,12 @@ ERP.configuracion = (() => {
 
     const tarjetaPermisos = () => {
         const { MODULOS, GRUPOS } = ERP.app;
-        const roles = Object.keys(ERP.auth.ROLES);
+        const roles = ERP.auth.ROLES_EMPRESA;
         const delegables = roles.filter((rol) => rol !== 'administrador');
-        const claves = GRUPOS.flatMap((grupo) => Object.keys(MODULOS).filter((clave) => MODULOS[clave].grupo === grupo));
+        // La matriz reparte módulos de la organización: los de plataforma no
+        // se delegan y ningún rol de empresa los ve.
+        const claves = GRUPOS.flatMap((grupo) => Object.keys(MODULOS).filter(
+            (clave) => MODULOS[clave].grupo === grupo && !ERP.auth.SOLO_PLATAFORMA.includes(clave)));
 
         // casillas[rol][modulo]: solo las editables; administrador y Configuración van fijas.
         const casillas = {};
@@ -1005,6 +1027,270 @@ ERP.configuracion = (() => {
 })();
 
 /* ============================================================
+   Administración SaaS — solo el super administrador de la plataforma
+
+   Gobierna organizaciones: las da de alta con su administrador, las
+   suspende y las reactiva. No entra a los datos de ninguna: su sesión no
+   tiene empresa, así que las políticas RLS de las tablas de operación no
+   le abren una sola fila. Todo pasa por las funciones saas_* del
+   servidor, que vuelven a comprobar el rol en cada llamada.
+   ============================================================ */
+
+ERP.plataforma = (() => {
+    const U = ERP.util;
+    const { el } = U;
+    const ui = ERP.ui;
+
+    /** El menú ya oculta el módulo, pero cada acción revalida el rol vigente. */
+    const autorizado = () => {
+        const sesion = ERP.auth.sincronizarSesion();
+        if (sesion && ERP.auth.puede('plataforma')) return true;
+        ERP.app.refrescar();
+        return false;
+    };
+
+    let cache = null;
+
+    const fecha = (valor) => {
+        if (!valor) return '—';
+        const d = new Date(valor);
+        return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('es-CO');
+    };
+
+    const recargar = async (pintar) => {
+        const res = await ERP.nube.saasOrganizaciones();
+        cache = res.ok ? res : { ok: false, error: res.error };
+        pintar();
+    };
+
+    /* ---------- Alta de una organización con su administrador ---------- */
+
+    const abrirAlta = (pintar) => {
+        if (!autorizado()) return;
+
+        const campos = {
+            razonSocial: ui.input({ placeholder: 'Razón social de la organización' }),
+            nit: ui.input({ placeholder: 'Ej. 900.123.456-7' }),
+            email: ui.input({ tipo: 'email', placeholder: 'admin@organizacion.com', autocomplete: 'off' }),
+            nombre: ui.input({ placeholder: 'Nombre y apellido' })
+        };
+        const errores = el('div');
+
+        const formulario = el('form', { class: 'stack' }, [
+            el('p', {
+                class: 'text-muted',
+                text: 'La organización nace vacía y aislada: sus datos no se cruzan con los de ninguna otra. El administrador que designe aquí gestionará a su propio equipo.'
+            }),
+            errores,
+            el('div', { class: 'grid-form' }, [
+                ui.campo('Razón social', campos.razonSocial, { clase: 'span-full' }),
+                ui.campo('NIT', campos.nit, { ayuda: 'Opcional. Aparece en facturas y reportes.' })
+            ]),
+            el('h3', { text: 'Administrador de la organización' }),
+            el('div', { class: 'grid-form' }, [
+                ui.campo('Correo electrónico', campos.email, { clase: 'span-full' }),
+                ui.campo('Nombre', campos.nombre)
+            ]),
+            el('p', {
+                class: 'text-muted',
+                text: 'La persona pone su propia contraseña al registrarse con ese correo. Si ya tiene cuenta y no pertenece a ninguna organización, entra de inmediato.'
+            })
+        ]);
+
+        const btnCancelar = el('button', { class: 'btn btn-secondary', text: 'Cancelar', attrs: { type: 'button' } });
+        const btnCrear = el('button', { class: 'btn', text: 'Crear organización', attrs: { type: 'button' } });
+
+        const ctrl = ui.modal({
+            titulo: 'Nueva organización',
+            subtitulo: 'Alta de un inquilino y su administrador',
+            contenido: formulario,
+            acciones: [btnCancelar, btnCrear]
+        });
+        btnCancelar.addEventListener('click', () => ctrl.cerrar());
+
+        const crear = async () => {
+            if (!autorizado()) return;
+            U.clear(errores);
+            btnCrear.disabled = true;
+            btnCrear.textContent = 'Creando…';
+            const res = await ERP.nube.saasCrearOrganizacion({
+                razonSocial: campos.razonSocial.value,
+                nit: campos.nit.value,
+                email: campos.email.value,
+                nombre: campos.nombre.value
+            });
+            btnCrear.disabled = false;
+            btnCrear.textContent = 'Crear organización';
+            if (!res.ok) {
+                errores.appendChild(ui.banner('No se creó la organización', res.error, 'danger'));
+                return;
+            }
+            ctrl.cerrar();
+            const org = res.organizacion || {};
+            ui.toastOk('Organización creada', org.estado === 'vinculada'
+                ? `${org.email} ya tenía cuenta y entra como administrador.`
+                : `${org.email} entrará como administrador en cuanto cree su cuenta con ese correo.`);
+            await recargar(pintar);
+        };
+
+        btnCrear.addEventListener('click', crear);
+        formulario.addEventListener('submit', (evento) => { evento.preventDefault(); crear(); });
+        campos.razonSocial.focus();
+    };
+
+    /* ---------- Ficha de cada organización ---------- */
+
+    const tarjetaOrganizacion = (org, pintar) => {
+        const activa = org.estado === 'activa';
+        const d = org.datos || {};
+        const u = org.usuarios || {};
+
+        const dato = (etiqueta, valor) => el('div', { class: 'org-dato' }, [
+            el('span', { class: 'org-dato-valor', text: U.num(valor || 0) }),
+            el('span', { class: 'org-dato-label', text: etiqueta })
+        ]);
+
+        const btnEstado = el('button', {
+            class: `btn btn-sm ${activa ? 'btn-secondary' : ''}`.trim(),
+            text: activa ? 'Suspender' : 'Reactivar',
+            attrs: { type: 'button' },
+            on: {
+                click: async () => {
+                    if (!autorizado()) return;
+                    const ok = await ui.confirmar({
+                        titulo: activa ? `Suspender ${org.razonSocial}` : `Reactivar ${org.razonSocial}`,
+                        mensaje: activa
+                            ? 'Sus usuarios dejarán de entrar de inmediato.'
+                            : 'Sus usuarios podrán volver a entrar.',
+                        detalle: activa
+                            ? 'No se borra nada: los datos quedan intactos y vuelven al reactivarla.'
+                            : '',
+                        textoAceptar: activa ? 'Suspender' : 'Reactivar',
+                        peligroso: activa
+                    });
+                    if (!ok || !autorizado()) return;
+                    const res = await ERP.nube.saasCambiarEstado(org.id, activa ? 'suspendida' : 'activa');
+                    if (!res.ok) {
+                        ui.toastError('No se pudo cambiar el estado', res.error);
+                        return;
+                    }
+                    ui.toastOk(activa ? 'Organización suspendida' : 'Organización reactivada', org.razonSocial);
+                    await recargar(pintar);
+                }
+            }
+        });
+
+        const admins = org.administradores || [];
+
+        return el('article', { class: `org-card${activa ? '' : ' suspendida'}` }, [
+            el('header', { class: 'org-head' }, [
+                el('div', { class: 'grow' }, [
+                    el('div', { class: 'row' }, [
+                        el('h3', { text: org.razonSocial }),
+                        ui.badge(activa ? 'Activa' : 'Suspendida', activa ? 'success' : 'danger')
+                    ]),
+                    el('span', { class: 'text-muted', text: `${org.nit || 'Sin NIT'} · desde ${fecha(org.creadaEn)}` })
+                ]),
+                btnEstado
+            ]),
+            el('div', { class: 'org-datos' }, [
+                dato('usuarios', u.total),
+                dato('ventas', d.ventas),
+                dato('compras', d.compras),
+                dato('gastos', d.gastos),
+                dato('productos', d.productos),
+                dato('terceros', d.terceros)
+            ]),
+            el('div', { class: 'org-admins' }, [
+                el('span', { class: 'org-dato-label', text: admins.length === 1 ? 'Administrador' : 'Administradores' }),
+                admins.length
+                    ? el('ul', { class: 'stack-sm' }, admins.map((a) => el('li', {}, [
+                        el('span', { class: 'strong', text: a.nombre }),
+                        el('span', { class: 'text-muted', text: ` · ${a.email}` }),
+                        a.activo === false ? ui.badge('Sin acceso', 'danger') : null,
+                        el('span', { class: 'text-muted', text: ` · último acceso ${fecha(a.ultimoAcceso)}` })
+                    ])))
+                    : el('p', { class: 'text-muted', text: 'Todavía nadie ha aceptado la invitación.' }),
+                org.invitacionesPendientes
+                    ? ui.badge(`${U.num(org.invitacionesPendientes)} invitación(es) pendiente(s)`, 'warning')
+                    : null
+            ])
+        ]);
+    };
+
+    /* ---------- Vista ---------- */
+
+    const vista = (contenedor) => {
+        if (!ERP.auth.puede('plataforma')) return;
+
+        const lista = el('div', { class: 'stack' });
+
+        const pintar = () => {
+            U.clear(lista);
+
+            if (!cache) {
+                lista.appendChild(ui.estadoCargando('Consultando las organizaciones…'));
+                recargar(pintar);
+                return;
+            }
+            if (!cache.ok) {
+                lista.appendChild(ui.banner('No se pudo consultar la plataforma', cache.error, 'warning'));
+                lista.appendChild(el('div', { class: 'row row-wrap' }, [el('button', {
+                    class: 'btn btn-secondary', text: 'Reintentar', attrs: { type: 'button' },
+                    on: { click: () => recargar(pintar) }
+                })]));
+                return;
+            }
+
+            const r = cache.resumen || {};
+            const indicador = (etiqueta, valor, contexto) => el('article', { class: 'kpi' }, [
+                el('span', { class: 'kpi-label', text: etiqueta }),
+                el('span', { class: 'kpi-value', text: U.num(valor || 0) }),
+                contexto ? el('span', { class: 'kpi-context', text: contexto }) : null
+            ]);
+            lista.appendChild(el('div', { class: 'grid-kpi' }, [
+                indicador('Organizaciones', r.organizaciones, 'inquilinos registrados'),
+                indicador('Activas', r.activas, `${U.num((r.organizaciones || 0) - (r.activas || 0))} suspendidas`),
+                indicador('Usuarios en total', r.usuarios, 'sin contar la plataforma')
+            ]));
+
+            const organizaciones = cache.organizaciones || [];
+            if (!organizaciones.length) {
+                lista.appendChild(ui.estadoVacio('Todavía no hay organizaciones',
+                    'Cree la primera y designe a su administrador.'));
+                return;
+            }
+            lista.appendChild(el('div', { class: 'org-grid' },
+                organizaciones.map((org) => tarjetaOrganizacion(org, pintar))));
+        };
+
+        pintar();
+
+        const btnNueva = el('button', {
+            class: 'btn', text: 'Nueva organización', attrs: { type: 'button' },
+            on: { click: () => abrirAlta(pintar) }
+        });
+        const btnRecargar = el('button', {
+            class: 'btn btn-ghost', text: 'Actualizar', attrs: { type: 'button' },
+            on: { click: () => recargar(pintar) }
+        });
+
+        U.appendAll(contenedor, [
+            el('div', { class: 'view-head' }, [
+                el('div', { class: 'grow' }, [
+                    el('h1', { text: 'Administración SaaS' }),
+                    el('p', { text: 'Organizaciones de la plataforma, sus administradores y su estado. Los datos de cada una son suyos: desde aquí no se abren.' })
+                ]),
+                el('div', { class: 'row row-wrap' }, [btnRecargar, btnNueva])
+            ]),
+            lista
+        ]);
+    };
+
+    return { vista };
+})();
+
+/* ============================================================
    Aplicación
    ============================================================ */
 
@@ -1028,11 +1314,12 @@ ERP.app = (() => {
         equilibrio: { etiqueta: 'Punto de equilibrio', icono: 'balance', grupo: 'Análisis', render: (c) => ERP.equilibrio.vista(c) },
         prestamos: { etiqueta: 'Simulador de préstamos', icono: 'calculate', grupo: 'Análisis', render: (c) => ERP.prestamos.vista(c) },
         nomina: { etiqueta: 'Nómina', icono: 'badge', grupo: 'Administración', render: (c) => ERP.nomina.vista(c) },
-        configuracion: { etiqueta: 'Configuración', icono: 'settings', grupo: 'Administración', render: (c) => ERP.configuracion.vista(c) }
+        configuracion: { etiqueta: 'Configuración', icono: 'settings', grupo: 'Administración', render: (c) => ERP.configuracion.vista(c) },
+        plataforma: { etiqueta: 'Administración SaaS', icono: 'apartment', grupo: 'Plataforma', render: (c) => ERP.plataforma.vista(c) }
     };
 
     /** Orden en que se muestran los grupos del menú lateral. */
-    const GRUPOS = ['Operación', 'Terceros', 'Análisis', 'Administración'];
+    const GRUPOS = ['Plataforma', 'Operación', 'Terceros', 'Análisis', 'Administración'];
 
     const estado = {
         // null = elegir al montar el primer módulo permitido para el rol.
@@ -1340,6 +1627,9 @@ ERP.app = (() => {
         ui.toastOk(`Bienvenido, ${usuario.nombre}`,
             `${ERP.auth.etiquetaRol(usuario.rol)}${usuario.empresa ? ` · ${usuario.empresa}` : ''}`);
 
+        // La plataforma no tiene datos propios: no hay nada que alinear.
+        if (usuario.rol === 'super_administrador') return;
+
         const meta = ERP.db.estadoDatos().meta;
         const propios = meta.origen === 'local' || meta.editado;
         const otraEmpresa = Boolean(meta.empresaNube) && meta.empresaNube !== usuario.empresaId;
@@ -1406,7 +1696,9 @@ ERP.app = (() => {
                 el('img', { attrs: { src: 'assets/IMG/logo.svg', alt: '' } }),
                 el('div', { class: 'sidebar-title' }, [
                     el('span', { text: 'ERP Financiero', style: { fontWeight: '700', fontSize: '0.9rem' } }),
-                    el('span', { text: U.truncate(ERP.db.config().empresa, 26) }),
+                    el('span', {
+                        text: ERP.auth.esSuper() ? 'Plataforma SaaS' : U.truncate(ERP.db.config().empresa, 26)
+                    }),
                     el('span', { class: 'sidebar-version', text: `Versión ${ERP.VERSION}` })
                 ])
             ]),

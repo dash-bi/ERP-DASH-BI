@@ -1,0 +1,6 @@
+{
+  "name": "ERP Financiero - Copiloto Inteligente",
+  "description": "Copiloto Inteligente y Sistema ERP Financiero SaaS con análisis de P&G, Balance General, Flujo de Caja, CxC/CxP, inventario SKU y control de roles RBAC.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

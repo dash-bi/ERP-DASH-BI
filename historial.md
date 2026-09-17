@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 2.1.0 | 2026-09-16 | *(esta versión)* | El enlace de los correos de Supabase vuelve a la dirección donde se usa la app, y la app lo atiende |
+| 2.2.0 | 2026-09-16 | *(esta versión)* | Plataforma SaaS multiempresa: super administrador, organizaciones con estado, rol auxiliar y árbol de usuarios |
+| 2.1.0 | 2026-09-16 | `2b971e0` | El enlace de los correos de Supabase vuelve a la dirección donde se usa la app, y la app lo atiende |
 | 2.0.0 | 2026-09-15 | `7ef7b2c` | Identidad en Supabase Auth: registro con correo y contraseña, invitaciones por rol y ninguna contraseña en el navegador |
 | 1.9.0 | 2026-09-15 | `095d503` | Conexión con Supabase: base de datos compartida con descarga y subida de instantáneas, control de revisiones y subida automática opcional |
 | 1.8.0 | 2026-09-15 | `ca1c152` | **Piel visual Terra:** rediseño basado en los diseños de Stitch (.design/stitch_erp_financiero_colombiano): verde bosque #4a7c59 sobre crema #faf6f0 con ámbar y terracota, Literata para títulos, Nunito Sans para textos y JetBrains Mono para cifras, menú lateral claro con íconos Material Symbols, tarjetas con borde fino, esquinas de 12 px y sombras suaves, ventas en verde y gastos en terracota en los gráficos, tema oscuro cálido y objetivos táctiles de 44 px. Sin cambios de funcionalidad. |
@@ -100,7 +101,9 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 - **Agregar un módulo** exige tres cambios:
   1. Su `<script>` en `index.html`.
   2. Su entrada en `MODULOS` (y `GRUPOS`) de `app.js`.
-  3. Su clave en `PERMISOS` de `auth.js`, siempre en `PERMISOS.administrador` (la lista completa de módulos) y en los roles que deban verlo por defecto.
+  3. Su clave en `PERMISOS` de `auth.js`, siempre en `PERMISOS.administrador` (la lista completa de módulos de organización) y en los roles que deban verlo por defecto.
+  4. Su regla en `privado.puede_modulo()` (migración nueva): el cliente decide lo que se dibuja, el servidor lo que se puede tocar.
+  - Los módulos de plataforma van en `SOLO_PLATAFORMA` y en `PERMISOS.super_administrador`, no en la lista del administrador: no se delegan ni aparecen en la matriz de permisos.
 
 ### Flujo de datos y repintado
 
@@ -137,7 +140,8 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
   1. **Esquema. HECHO el 2026-09-14.** `supabase/001_esquema_inicial.sql` y `supabase/002_funciones_permisos_privadas.sql` están aplicados.
   2. **Conexión de la app. HECHA el 2026-09-15.** `supabase/003_conexion_app.sql`, `004_endurecer_anon.sql` y `005_indice_sincronizado_por.sql`, más `assets/JS/nube.js` y la tarjeta «Nube (Supabase)» de Configuración. Ver *Nube: la base compartida*.
   3. **Identidad en Supabase Auth. HECHA el 2026-09-15.** `supabase/006_registro_usuarios.sql` y la versión 2.0.0 de la aplicación. Ver *Registro de usuarios y contraseñas*.
-  4. **Escritura directa contra PostgreSQL. PENDIENTE.** Funciones transaccionales para registrar ventas, compras, abonos y pagos (existencias, costo ponderado y saldos en una operación) y reemplazo de `db.js` módulo por módulo. Hasta entonces la app calcula en el navegador y sincroniza el conjunto completo.
+  4. **Plataforma multiempresa. HECHA el 2026-09-16.** `supabase/007_organizacion_saas_roles_arbol.sql`. Ver *Plataforma: organizaciones y roles en árbol*.
+  5. **Escritura directa contra PostgreSQL. PENDIENTE.** Funciones transaccionales para registrar ventas, compras, abonos y pagos (existencias, costo ponderado y saldos en una operación) y reemplazo de `db.js` módulo por módulo. Hasta entonces la app calcula en el navegador y sincroniza el conjunto completo.
 - **Modelo:**
   - 14 tablas con `empresa_id`, que permiten varias empresas.
   - Los `id` son texto: se conservan los actuales al migrar y los nuevos reciben un UUID.
@@ -151,15 +155,31 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
   - `empresas` y `perfiles` solo los modifica el administrador.
   - `privado.empresa_actual()`, `privado.rol_actual()` y `privado.puede_modulo()` no están expuestas en la API.
   - `public.tomar_consecutivo('venta'|'compra')` numera de forma atómica.
-  - El asesor de seguridad deja 9 avisos `authenticated_security_definer_function_executable` (`mi_perfil`, `crear_empresa`, `descargar_snapshot`, `subir_snapshot`, `tomar_consecutivo`, `invitar_usuario`, `revocar_invitacion`, `actualizar_perfil` y `usuarios_empresa`). **Son intencionales:** esas cinco funciones son la API de la app y cada una comprueba empresa, rol y permisos antes de actuar. Cualquier función nueva que no deba llamarse desde el navegador va al esquema `privado`.
+  - El asesor de seguridad deja 12 avisos `authenticated_security_definer_function_executable`: las nueve anteriores más `saas_listar_organizaciones`, `saas_crear_organizacion_con_admin` y `saas_cambiar_estado_organizacion`. **Son intencionales:** esas cinco funciones son la API de la app y cada una comprueba empresa, rol y permisos antes de actuar. Cualquier función nueva que no deba llamarse desde el navegador va al esquema `privado`.
 - **Verificado:** con una transacción revertida y usuarios simulados, el vendedor lee su empresa, crea clientes y numera ventas (FV-0001, FV-0002), pero no crea gastos, no escribe en otra empresa, no modifica la empresa ni numera compras. Otra empresa solo ve sus datos y un usuario sin sesión no ve nada. La base quedó vacía tras la prueba.
 - **Al tocar el esquema:** aplicar con `apply_migration`, guardar la misma migración como `supabase/00N_*.sql` y volver a revisar los asesores de seguridad y rendimiento. `supabase/` está en `.vercelignore`.
+
+### Plataforma: organizaciones y roles en árbol
+
+- **Tres niveles.** `super_administrador` (plataforma, **sin empresa**) → `administrador` (una organización) → `contador`, `vendedor`, `auxiliar`. Cada perfil guarda `parent_id`: quién lo dio de alta. Con eso se dibuja el árbol de Configuración y se audita de dónde salió cada acceso.
+- **El super administrador no entra a los datos de nadie.** Su `privado.empresa_actual()` es nula, así que ninguna política de las tablas de operación le abre una fila, y `privado.puede_modulo()` le devuelve `false` para todo. Gobierna organizaciones con las funciones `saas_*`, que vuelven a comprobar su rol en cada llamada.
+- **Funciones de plataforma** (solo `super_administrador`): `saas_listar_organizaciones()` (estado, administradores y volumen de datos de cada una), `saas_crear_organizacion_con_admin()` y `saas_cambiar_estado_organizacion()`.
+- **Suspender una organización** deja fuera a todos sus usuarios en el acto, sin borrar nada: `empresa_actual()` solo devuelve empresas `activa`, y el cliente aplica la misma regla (`desdePerfil` devuelve null si `estadoEmpresa` es `suspendida`). Reactivarla los devuelve tal cual estaban.
+- **Nadie asciende solo.** `invitar_usuario` y `actualizar_perfil` solo aceptan `administrador`, `contador`, `vendedor` y `auxiliar`; la restricción de `invitaciones.rol` lo repite en la base. El rol de plataforma se nombra únicamente desde el SQL Editor:
+
+      select privado.nombrar_super_administrador('correo@empresa.com');
+
+  La persona debe haberse registrado antes en la aplicación. La función vive en el esquema `privado`, así que no se puede llamar desde la API, y se niega a dejar una organización sin administrador activo (use `p_forzar => true` si es lo que quiere).
+- **Rol `auxiliar`:** tablero, clientes, proveedores, inventario, compras, gastos y cartera. Sin ventas, sin estados financieros, sin nómina y sin configuración. Como los demás roles operativos, el administrador puede ajustarlo en «Permisos por rol».
+- **En la aplicación:** módulo «Administración SaaS» (grupo *Plataforma*, solo para el super administrador) con el resumen, la ficha de cada organización y el alta con su administrador; y Configuración → «Usuarios y accesos» convertida en árbol, con cada administrador y sus subordinados colgando de él.
+- **Verificado el 2026-09-16:** en transacciones revertidas, 23 casos. Alta de organización con su administrador; el administrador entra solo al registrarse y queda colgando del super; invita un auxiliar que hereda el jefe correcto; el auxiliar obtiene exactamente sus siete módulos; ni el administrador ni el contador pueden crear roles de plataforma ni llamar a `saas_*`; al suspender, su administrador se queda sin empresa y sin módulos; al reactivar vuelve. Con el rol `authenticated` (el que usa la app), cada administrador solo ve su propia organización y sus propios perfiles, y el super ve las dos organizaciones pero cero filas de operación. El script se ejecutó dos veces seguidas sin errores y sin tocar los datos existentes.
+- **Aviso nuevo del asesor de seguridad:** «Leaked Password Protection Disabled». Se activa en Authentication → Passwords y compara las contraseñas nuevas contra HaveIBeenPwned. Vale la pena encenderlo.
 
 ### Registro de usuarios y contraseñas
 
 - **Dónde viven las credenciales.** En `auth.users`, la tabla de Supabase Auth: correo y contraseña cifrada con bcrypt, invisible desde la API y desde el navegador. **No se creó una tabla propia de contraseñas a propósito:** cifrarlas a mano sería menos seguro y no traería confirmación de correo, recuperación ni caducidad de sesiones.
 - **`public.perfiles`** es la tabla de los usuarios de la aplicación: mismo `id` que `auth.users`, más `email`, `usuario`, `nombre`, `rol`, `activo` y `ultimo_acceso`. Nunca contiene contraseñas.
-- **`public.invitaciones`** decide quién puede registrarse: correo, usuario, nombre, rol, estado y vencimiento (30 días). Índice único sobre el correo mientras está `pendiente`, para que al registrarse no haya dos empresas candidatas.
+- **`public.invitaciones`** decide quién puede registrarse: correo, usuario, nombre, rol (`administrador`, `contador`, `vendedor` o `auxiliar`; nunca de plataforma), estado y vencimiento (30 días). Índice único sobre el correo mientras está `pendiente`, para que al registrarse no haya dos empresas candidatas.
 - **Disparadores sobre `auth.users`** (`privado.al_registrar_usuario`, `privado.al_cambiar_correo`): al crear la cuenta, si hay invitación vigente para ese correo se crea el perfil y la invitación queda `aceptada`; si el nombre de usuario ya se ocupó, se numera en vez de fallar. Al cambiar el correo de la cuenta, el perfil lo sigue.
 - **Sin invitación no hay empresa.** Quien se registra por su cuenta no entra a ninguna: la pantalla de acceso le ofrece crear la suya (`crear_empresa`), y queda como administrador. Así funciona el multiempresa: cada quien con sus datos, aislados por RLS.
 - **Funciones de administración** (solo rol administrador): `invitar_usuario` (si el correo ya tiene cuenta sin empresa, la vincula de una vez), `revocar_invitacion`, `actualizar_perfil` (nombre, rol y acceso; **nunca deja la empresa sin un administrador activo**) y `usuarios_empresa` (lista para Configuración).

@@ -945,3 +945,105 @@ table.data td.wrap { white-space: normal; min-width: 190px; font-weight: 600; }
 @media (max-width: 860px) {
     .icon-btn { width: 44px; height: 44px; }
 }
+
+/* ============================================================
+   Árbol de usuarios (Configuración) y organizaciones (plataforma)
+   ============================================================ */
+
+.arbol { display: flex; flex-direction: column; gap: var(--sp-4); }
+
+.arbol-rama { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+.arbol-titulo {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+}
+
+.arbol-nodo {
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    padding: var(--sp-3) var(--sp-4);
+}
+
+/* El jefe de la rama se marca con el verde de la marca. */
+.arbol-nodo.es-raiz { border-left: 3px solid var(--primary); }
+
+.arbol-nodo.sin-acceso { opacity: 0.62; }
+
+.arbol-quien { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+
+.arbol-avatar {
+    flex: 0 0 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    color: var(--primary-hover);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.arbol-correo { display: block; font-size: 0.78rem; color: var(--text-soft); }
+.arbol-modulos { font-size: 0.75rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+
+/* Los subordinados cuelgan del administrador con una guía vertical. */
+.arbol-hijos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    margin-left: var(--sp-5);
+    padding-left: var(--sp-4);
+    border-left: 2px solid var(--border);
+}
+
+.org-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: var(--sp-4);
+}
+
+.org-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    padding: var(--sp-5);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.org-card.suspendida { background: var(--surface-2); border-style: dashed; }
+
+.org-head { display: flex; align-items: flex-start; gap: var(--sp-3); }
+
+.org-datos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-3);
+    padding: var(--sp-3) 0;
+    border-block: 1px solid var(--border);
+}
+
+.org-dato { display: flex; flex-direction: column; }
+.org-dato-valor { font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; }
+.org-dato-label {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+}
+
+.org-admins { display: flex; flex-direction: column; gap: var(--sp-2); }
+.org-admins li { font-size: 0.84rem; }
+
+@media (max-width: 560px) {
+    .arbol-hijos { margin-left: var(--sp-3); padding-left: var(--sp-3); }
+    .org-datos { grid-template-columns: repeat(2, 1fr); }
+}
