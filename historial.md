@@ -84,7 +84,11 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 - **`index.html` y `vercel.json` están en la raíz del repositorio**, así que Vercel publica la raíz sin `outputDirectory`. **Root Directory** en cada proyecto de Vercel debe quedar **vacío**: si apunta a «Aplicación con Claude», el build falla porque esa subcarpeta ya no existe dentro del repositorio.
 - **`.vercelignore`** evita publicar `versionar.py` y los archivos de configuración de git.
 - **Protección de Vercel.** `finanzas-dash-bi.vercel.app` tiene Deployment Protection y redirige al login de Vercel.
-- **Direcciones autorizadas en Supabase.** Authentication → URL Configuration. La **Site URL** debe ser la dirección de producción (la de Vercel), y en **Redirect URLs** deben estar todas las direcciones desde las que se use la app, incluida la de desarrollo. Si no coinciden, los correos de confirmación y de recuperación llevan a `localhost:3000`.
+- **Direcciones autorizadas en Supabase.** Authentication → URL Configuration. **Configurado el 2026-09-16:**
+  - **Site URL:** `https://erp-dash-bi.vercel.app/` (alias estable de producción).
+  - **Redirect URLs:** `https://erp-dash-bi.vercel.app/**` y `https://*-dash-bi.vercel.app/**`.
+  - El comodín cubre las direcciones por despliegue (`erp-dash-<hash>-dash-bi.vercel.app`), que además están detrás del SSO de Vercel: sirven para el dueño del proyecto, no para los demás usuarios.
+  - Sin esto los correos de confirmación y recuperación llevan a `http://localhost:3000`, la Site URL de fábrica. Para probar en el equipo hay que añadir el puerto local a Redirect URLs.
 - **Versión vieja en producción.** Revisar en Vercel que el despliegue *Current* sea el último commit; un Instant Rollback lo deja fijo.
 
 ## Arquitectura
