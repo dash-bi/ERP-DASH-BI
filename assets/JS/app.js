@@ -6,7 +6,7 @@ window.ERP = window.ERP || {};
 
 /* Versión publicada. Al cambiarla, actualizar también el ?v= de index.html
    para que el navegador no reutilice los archivos anteriores. */
-ERP.VERSION = '2.2.0';
+ERP.VERSION = '2.3.0';
 
 /* ============================================================
    Configuración del sistema (solo administrador)
@@ -1873,6 +1873,10 @@ ERP.app = (() => {
         raiz.appendChild(shell);
         actualizarShell();
         pintarVista(contenedorVista);
+
+        // El copiloto acompaña a todos los módulos. Solo lee: responde con los
+        // datos que ya están en pantalla y, como mucho, abre otro módulo.
+        if (ERP.copiloto) ERP.copiloto.montar(raiz);
     };
 
     /* ---------- Arranque ---------- */

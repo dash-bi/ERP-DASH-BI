@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 2.2.0 | 2026-09-16 | *(esta versión)* | Plataforma SaaS multiempresa: super administrador, organizaciones con estado, rol auxiliar y árbol de usuarios |
+| 2.3.0 | 2026-09-16 | *(esta versión)* | Copiloto: asistente que resuelve dudas con los datos y los módulos del propio sistema |
+| 2.2.0 | 2026-09-16 | `e19eae5` | Plataforma SaaS multiempresa: super administrador, organizaciones con estado, rol auxiliar y árbol de usuarios |
 | 2.1.0 | 2026-09-16 | `2b971e0` | El enlace de los correos de Supabase vuelve a la dirección donde se usa la app, y la app lo atiende |
 | 2.0.0 | 2026-09-15 | `7ef7b2c` | Identidad en Supabase Auth: registro con correo y contraseña, invitaciones por rol y ninguna contraseña en el navegador |
 | 1.9.0 | 2026-09-15 | `095d503` | Conexión con Supabase: base de datos compartida con descarga y subida de instantáneas, control de revisiones y subida automática opcional |
@@ -97,7 +98,7 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
 ### Carga y módulos
 
 - **Scripts clásicos**, sin módulos ES, para que funcione en `file://`. Cada archivo es un IIFE que asigna una API pública a `ERP.<modulo>`.
-- **El orden de `<script>` en `index.html` es la dependencia:** `util → db → ui → charts/pdf/xlsx/pdfreader → lines → auth → nube → negocio → financials → dashboard → tools/payroll → app`. Las referencias a módulos cargados después solo son válidas dentro de funciones que se ejecutan más tarde (p. ej. `ERP.configuracion` usa `ERP.app.MODULOS`).
+- **El orden de `<script>` en `index.html` es la dependencia:** `util → db → ui → charts/pdf/xlsx/pdfreader → lines → auth → nube → negocio → financials → dashboard → tools/payroll → copiloto → app`. Las referencias a módulos cargados después solo son válidas dentro de funciones que se ejecutan más tarde (p. ej. `ERP.configuracion` usa `ERP.app.MODULOS`).
 - **Agregar un módulo** exige tres cambios:
   1. Su `<script>` en `index.html`.
   2. Su entrada en `MODULOS` (y `GRUPOS`) de `app.js`.
@@ -158,6 +159,20 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
   - El asesor de seguridad deja 12 avisos `authenticated_security_definer_function_executable`: las nueve anteriores más `saas_listar_organizaciones`, `saas_crear_organizacion_con_admin` y `saas_cambiar_estado_organizacion`. **Son intencionales:** esas cinco funciones son la API de la app y cada una comprueba empresa, rol y permisos antes de actuar. Cualquier función nueva que no deba llamarse desde el navegador va al esquema `privado`.
 - **Verificado:** con una transacción revertida y usuarios simulados, el vendedor lee su empresa, crea clientes y numera ventas (FV-0001, FV-0002), pero no crea gastos, no escribe en otra empresa, no modifica la empresa ni numera compras. Otra empresa solo ve sus datos y un usuario sin sesión no ve nada. La base quedó vacía tras la prueba.
 - **Al tocar el esquema:** aplicar con `apply_migration`, guardar la misma migración como `supabase/00N_*.sql` y volver a revisar los asesores de seguridad y rendimiento. `supabase/` está en `.vercelignore`.
+
+### Copiloto: el asistente de consultas
+
+- **Qué es.** `assets/JS/copiloto.js` (`ERP.copiloto`): un cajón flotante, disponible en todos los módulos, que responde dudas **con los datos y los cálculos de esta misma aplicación**. No hay modelo de lenguaje, ni clave de API, ni llamadas a internet: funciona igual sin conexión.
+- **Por qué no un modelo de lenguaje.** El copiloto de referencia (`.design/erp-financiero---copiloto-inteligente`) manda el snapshot del ERP a Gemini desde un servidor Express con `GEMINI_API_KEY`. Aquí no hay servidor, la clave no puede vivir en el navegador y, sobre todo, un modelo puede responder cosas que no están en el sistema. De ese proyecto se tomó **la forma** —cajón lateral, preguntas sugeridas por rol, respuestas con acciones al final y las directivas RBAC— y se cambió **el motor**.
+- **Tres garantías, por construcción:**
+  1. **Solo lee.** El archivo no llama a ninguna función que escriba. Lo más que hace es abrir un módulo (`ERP.app.irA`), que es navegar. Se comprueba con: `grep -nE "\.(insert|update|remove|registrar[A-Z]|editar[A-Z]|vaciar|reset|persist|updateConfig|importarRespaldo)\(" assets/JS/copiloto.js`.
+  2. **No inventa.** Cada cifra sale de `ERP.finanzas`, `ERP.db`, `ERP.equilibrio` y `ERP.prestamos`, las mismas funciones que alimentan el tablero y los estados financieros: el copiloto no puede contradecir a las pantallas.
+  3. **Respeta el rol.** Cada tema declara el módulo del que depende y se comprueba con `ERP.auth.puede()`. A un vendedor que pregunta por márgenes o nómina se le explica que ese módulo no está habilitado para su rol.
+- **Temas que responde:** ventas e ingresos, utilidad y márgenes, gastos por categoría, cartera con antigüedad y mayores deudores, cuentas por pagar, inventario y faltantes, caja y flujo, punto de equilibrio, cuota de un préstamo (si la pregunta trae monto, plazo y tasa), parámetros y última liquidación de nómina, saldo y cupo de un cliente por su nombre, estado de una factura por su número, cómo registrar venta/compra/gasto/abono/respaldo, qué ve cada rol y dónde se guardan los datos.
+- **Periodo.** Sin pista, el mes en curso. Reconoce «hoy», «esta semana», «este año» e «histórico», y siempre dice en la respuesta de qué periodo habla.
+- **Fuera de alcance.** Cualquier pregunta que no encaje en un tema recibe «solo respondo con la información que hay en esta aplicación» más la lista de lo que sí puede preguntar, filtrada por su rol.
+- **Agregar un tema** es añadir un objeto a `TEMAS` con `clave`, `modulo` (el permiso necesario, o `null`), `palabras`, `ejemplo` (aparece en las sugerencias) y `responder(ctx)`, que devuelve nodos del DOM. `prioritario: true` lo hace revisar antes que los demás, como en las preguntas de procedimiento («cómo registro una venta» es procedimiento, no ventas).
+- **Verificado el 2026-09-16:** cifras contrastadas contra el tablero (ventas del mes $21.403.665, cartera $23.765.878 con $16.059.954 vencida, inventario $41.953.494 con 6 faltantes); cuota de un préstamo de $30.000.000 a 12 meses al 1,8 % = $2.802.059; búsqueda de cliente y de factura; guías de procedimiento; a un vendedor se le niegan márgenes y nómina; dos preguntas ajenas al sistema («capital de Francia», «receta de arroz») caen en el mensaje de alcance. Interfaz probada en claro y oscuro, a 375 px y en escritorio, sin errores de consola.
 
 ### Plataforma: organizaciones y roles en árbol
 

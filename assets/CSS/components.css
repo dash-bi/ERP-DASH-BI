@@ -1047,3 +1047,174 @@ table.data td.wrap { white-space: normal; min-width: 190px; font-weight: 600; }
     .arbol-hijos { margin-left: var(--sp-3); padding-left: var(--sp-3); }
     .org-datos { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ============================================================
+   Copiloto: lanzador flotante y cajón de conversación
+   ============================================================ */
+
+.copi-lanzador {
+    position: fixed;
+    right: var(--sp-5);
+    bottom: var(--sp-5);
+    z-index: 70;
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.copi-lanzador:hover { background: var(--primary-hover); transform: translateY(-2px); }
+.copi-lanzador .icono { font-size: 24px; }
+
+.copi-cajon {
+    position: fixed;
+    right: var(--sp-5);
+    bottom: calc(var(--sp-5) + 64px);
+    z-index: 71;
+    width: min(420px, calc(100vw - var(--sp-5) * 2));
+    max-height: min(640px, calc(100vh - 140px));
+    display: none;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.copi-cajon.abierto { display: flex; }
+
+.copi-cabecera {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+}
+
+.copi-sub { display: block; font-size: 0.72rem; color: var(--text-soft); }
+
+.copi-historial {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--sp-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+}
+
+.copi-msg {
+    max-width: 92%;
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-md);
+    font-size: 0.86rem;
+    line-height: 1.55;
+}
+
+.copi-msg p { margin: 0 0 var(--sp-2); }
+.copi-msg p:last-child { margin-bottom: 0; }
+
+/* Lo que escribe la persona: alineado a la derecha, en verde de marca. */
+.copi-usuario {
+    align-self: flex-end;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-weight: 600;
+}
+
+.copi-copiloto {
+    align-self: flex-start;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    width: 100%;
+}
+
+.copi-firma {
+    display: block;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--primary-hover);
+    margin-bottom: var(--sp-2);
+}
+
+.copi-lista { margin: 0; padding-left: var(--sp-5); display: flex; flex-direction: column; gap: 4px; }
+
+.copi-cifras {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--sp-2);
+    margin: var(--sp-2) 0;
+}
+
+.copi-cifra {
+    display: flex;
+    flex-direction: column;
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+}
+
+.copi-cifra-label {
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+}
+
+.copi-cifra-valor { font-family: var(--font-mono); font-size: 0.95rem; font-weight: 600; }
+
+.copi-nota { font-size: 0.76rem; line-height: 1.5; }
+
+.copi-acciones, .copi-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
+
+.copi-chips { padding: 0 var(--sp-4) var(--sp-2); }
+
+.copi-chip {
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    background: var(--surface-2);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.copi-chip:hover { border-color: var(--primary); color: var(--primary-hover); }
+
+.copi-entrada {
+    display: flex;
+    gap: var(--sp-2);
+    padding: var(--sp-3) var(--sp-4);
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+}
+
+.copi-entrada .input { flex: 1 1 auto; }
+
+.copi-msg .table-wrap { margin: var(--sp-2) 0; }
+.copi-msg .data th, .copi-msg .data td { font-size: 0.78rem; padding: 6px 8px; }
+
+@media (max-width: 560px) {
+    .copi-cajon {
+        right: var(--sp-3);
+        left: var(--sp-3);
+        bottom: calc(var(--sp-3) + 64px);
+        width: auto;
+        max-height: calc(100vh - 160px);
+    }
+    .copi-lanzador { right: var(--sp-3); bottom: var(--sp-3); width: 56px; height: 56px; }
+}
