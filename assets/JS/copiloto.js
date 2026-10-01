@@ -39,6 +39,12 @@ ERP.copiloto = (() => {
        pierde al recargar. No se guarda nada en el navegador. */
     let conversacion = [];
     let abierto = false;
+    /* La aplicación se repinta entera con cada cambio de datos, así que el
+       cajón se reconstruye. Lo que el usuario llevaba escrito vive aquí, como
+       los filtros de los demás módulos, y vuelve al campo al montar. El foco
+       no se restaura: al repintar lo pierden todos los formularios por igual,
+       y devolvérselo solo a este se lo quitaría a quien esté escribiendo. */
+    let borrador = '';
     let cajon = null;
     let historial = null;
     let campo = null;
@@ -406,8 +412,8 @@ ERP.copiloto = (() => {
                 const cfg = ERP.db.config();
                 const empleados = ERP.db.all('empleados').filter((e) => e.activo !== false);
                 const nominas = ERP.db.all('nominas');
-                const ultimo = nominas.length
-                    ? nominas.reduce((a, b) => (a.periodo > b.periodo ? a : b)).periodo : null;
+                const periodos = nominas.map((n) => n.periodo).sort();
+                const ultimo = periodos.length ? periodos[periodos.length - 1] : null;
                 const delPeriodo = ultimo ? nominas.filter((n) => n.periodo === ultimo) : [];
                 return [
                     parrafo('Parámetros vigentes de nómina:'),
@@ -685,6 +691,7 @@ ERP.copiloto = (() => {
         conversacion.push({ quien: 'usuario', texto: limpio });
         conversacion.push({ quien: 'copiloto', texto: limpio });
         pintarConversacion();
+        borrador = '';
         if (campo) campo.value = '';
     };
 
@@ -711,7 +718,8 @@ ERP.copiloto = (() => {
     /** Construye el lanzador y el cajón dentro del shell de la aplicación. */
     const montar = (raiz) => {
         historial = el('div', { class: 'copi-historial', attrs: { role: 'log', 'aria-live': 'polite' } });
-        campo = ui.input({ placeholder: 'Pregunte sobre sus datos o sus módulos…' });
+        campo = ui.input({ placeholder: 'Pregunte sobre sus datos o sus módulos…', valor: borrador });
+        campo.addEventListener('input', () => { borrador = campo.value; });
 
         const formulario = el('form', { class: 'copi-entrada' }, [
             campo,

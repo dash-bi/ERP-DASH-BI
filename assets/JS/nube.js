@@ -298,6 +298,12 @@ ERP.nube = (() => {
         avisar();
         try {
             return await tarea();
+        } catch (error) {
+            // Nadie debe quedarse sin respuesta: los llamadores esperan
+            // siempre un {ok}, así que un fallo inesperado se traduce aquí
+            // en vez de escaparse como promesa rechazada sin atender.
+            console.error(`El copiloto de la nube falló mientras estaba ${etiqueta}`, error);
+            return fallo('No se pudo completar la operación. Intente de nuevo; si persiste, revise la consola del navegador.');
         } finally {
             ocupado = '';
             avisar();
@@ -600,7 +606,6 @@ ERP.nube = (() => {
     };
 
     return {
-        PROYECTO_URL: PROYECTO.url,
         configurada, conectado, estado, iniciar,
         entrar, registrarse, recuperar, cambiarClave, salir,
         consumirEnlace, direccionDeRegreso,

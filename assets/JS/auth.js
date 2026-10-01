@@ -232,7 +232,7 @@ ERP.auth = (() => {
     const esSuper = () => Boolean(usuarioActual && usuarioActual.rol === 'super_administrador');
 
     return {
-        ROLES, ROLES_EMPRESA, PERMISOS, SOLO_ADMINISTRADOR, SOLO_PLATAFORMA, esSuper,
+        ROLES, ROLES_EMPRESA, SOLO_ADMINISTRADOR, SOLO_PLATAFORMA, esSuper,
         iniciarSesion, registrar, recuperar, cambiarClave,
         cerrarSesion, restaurarSesion, sincronizarSesion,
         usuario, puede, modulosPermitidos, modulosDeRol, guardarPermisos, etiquetaRol

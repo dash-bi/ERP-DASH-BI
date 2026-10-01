@@ -27,7 +27,8 @@ El script actualiza a la vez `ERP.VERSION` en `app.js` (visible en el menú y en
 
 | Versión | Fecha | Commit | Cambios |
 | --- | --- | --- | --- |
-| 2.3.0 | 2026-09-16 | *(esta versión)* | Copiloto: asistente que resuelve dudas con los datos y los módulos del propio sistema |
+| 2.3.1 | 2026-09-30 | *(esta versión)* | Correcciones de la auditoría: errores asíncronos sin respuesta, arreglo vivo de productos, borrador del copiloto y código muerto |
+| 2.3.0 | 2026-09-16 | `7899065` | Copiloto: asistente que resuelve dudas con los datos y los módulos del propio sistema |
 | 2.2.0 | 2026-09-16 | `e19eae5` | Plataforma SaaS multiempresa: super administrador, organizaciones con estado, rol auxiliar y árbol de usuarios |
 | 2.1.0 | 2026-09-16 | `2b971e0` | El enlace de los correos de Supabase vuelve a la dirección donde se usa la app, y la app lo atiende |
 | 2.0.0 | 2026-09-15 | `7ef7b2c` | Identidad en Supabase Auth: registro con correo y contraseña, invitaciones por rol y ninguna contraseña en el navegador |
@@ -281,6 +282,14 @@ Push a `main` de **`github.com/dash-bi/ERP-DASH-BI`** (remoto `origin`) → Verc
   - `pdfreader.js`: extrae texto con `DecompressionStream`.
 - **Importación de facturas.** `importer.js` decide si es compra, gasto o venta comparando NIT con `config.nit` y el contenido. **Nunca registra solo**: abre el formulario prellenado para confirmar y bloquea CUFE duplicados.
 - **Piel visual.** Vive solo en `assets/CSS/`: `base.css` (tokens y tema claro/oscuro por `data-theme`), `layout.css` y `components.css`.
+
+### Auditoría con OpenCodeReview
+
+- **Herramienta.** `npm install -g @alibaba-group/open-code-review` deja el comando `ocr` (repositorio `github.com/alibaba/open-code-review`, Apache-2.0).
+- **Solo en modo delegación.** `ocr delegate preview` y `ocr delegate rule <archivos>` resuelven qué revisar y con qué reglas **sin enviar nada a ningún modelo**. `ocr review` y `ocr scan` sí mandan los diffs a un servicio de IA externo: no están permitidos en `.claude/settings.local.json` a propósito.
+- **Permisos.** `.claude/settings.local.json` (ignorado por git) habilita `ocr delegate|rules|config|version` y `git status|diff|log|show`. Sin esas reglas, el clasificador de modo automático bloquea la ejecución por posible salida de datos.
+- **Auditoría del 2026-09-30 (versión 2.3.1):** cinco tramos sobre las ~11.000 líneas del sistema. Cuatro hallazgos, los cuatro corregidos (ver la tabla de versiones). Siete sospechas descartadas con medición o con una prueba, entre ellas el coste de repintar el copiloto (+3,8 ms con ocho preguntas) y la simetría de entradas y salidas del inventario.
+- **Comprobaciones que vale la pena repetir** tras tocar la contabilidad, con los datos reales cargados en el navegador: saldo de cada documento = total − abonos/pagos (solo crédito; el contado nace en cero), existencias = compras − ventas vigentes, subtotales recalculados desde las líneas, y `balanceGeneral().descuadre`. En el respaldo de DASH-BI el descuadre es de $0,45 y la diferencia entre inventario contable y físico de $22.272 por redondeo del costo promedio: las dos son conocidas y la segunda se muestra en pantalla.
 
 ## Convenciones del código
 

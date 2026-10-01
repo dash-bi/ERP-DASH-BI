@@ -46,3 +46,6 @@ desktop.ini
 /erp-financiero---copiloto-inteligente/
 /node_modules/
 /dist/
+
+# Ajustes locales de Claude Code (no se publican)
+/.claude/settings.local.json

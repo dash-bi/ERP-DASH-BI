@@ -449,7 +449,9 @@ ERP.db = (() => {
 
     const clientes = () => all('terceros').filter((t) => t.tipo === 'cliente');
     const proveedores = () => all('terceros').filter((t) => t.tipo === 'proveedor');
-    const productos = () => all('productos');
+    // Copia, como clientes() y proveedores(): quien la reciba puede ordenarla
+    // para mostrarla sin reordenar de paso los datos guardados.
+    const productos = () => [...all('productos')];
     const productoPorId = (id) => get('productos', id);
     const terceroPorId = (id) => get('terceros', id);
 
